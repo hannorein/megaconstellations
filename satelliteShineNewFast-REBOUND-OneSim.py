@@ -13,12 +13,7 @@ def getXYZVVV(M, a, omega, e, Omega, inc, m0, m1):
     sim.add(M=M,a=a,omega=omega,e=e,Omega=Omega,m=m1,inc=inc)
     return sim.particles[1].xyz + sim.particles[1].vxyz
 
-####################
-# Written by Aaron Boley, June 2021
-# Edited by Sam Lawler, June 2021
-# Edited by Hanno Rein, July 2021
-# ####################
-
+""
 twopi=np.pi*2
 MEarth = 5.97e24
 REarth = 6378.135e3
@@ -140,11 +135,15 @@ def getStereographic(latitude, tilt, hour):
     return xyz_rn[:,1:3]/(1.+xyz_rn[:,0,np.newaxis]), magV
 
 ""
-latitudes = [90,0,-90]
-hours = np.linspace(-5,5,100,endpoint=True)
+latitudes = [-30,20,-50]
+hours = np.linspace(-7,7,1000,endpoint=True)
+sim.t = 0
 for k, hour in enumerate(hours):
+    if k>0:
+        sim.dt = (hours[k-1]-hours[k])*60*60
+        sim.step()
     timesOfYear = {"winter solstice":-np.pi/2.,"equinox":0.,"summer solstice":np.pi/2.}
-    magVmin, magVmax = 5, 8
+    magVmin, magVmax =5, 8
     fig, axs = plt.subplots(len(latitudes),len(timesOfYear),squeeze=False, figsize=(2+4*len(timesOfYear),4*len(latitudes)))
     cm = plt.cm.get_cmap('viridis_r')
     for i, latitude in enumerate(latitudes):
@@ -170,7 +169,7 @@ for k, hour in enumerate(hours):
 
             tilt = 23.4*np.sin(timesOfYear[timeOfYear])
 
-            xyzf_stereographic, magV = getStereographic(latitude/180.*np.pi, tilt/180.*np.pi,hour/12.*np.pi)
+            xyzf_stereographic, magV = getStereographic(latitude/180.*np.pi, tilt/180.*np.pi, hour/12.*np.pi)
             im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
 
             card_pos = 1.07
@@ -182,10 +181,8 @@ for k, hour in enumerate(hours):
     fig.suptitle("Midnight %+.1fh"%hour, fontsize=16)
     fig.tight_layout()
     fig.colorbar(im,ax=axs.ravel().tolist(),label="magV");
-    fig.savefig("plot_%50d.png"%k)
-
-""
-
+    fig.savefig("plot_%05d.png"%k, facecolor="white")
+    plt.close(fig)
 
 ""
 
