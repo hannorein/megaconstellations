@@ -3,6 +3,7 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pylab as plt
 from matplotlib.collections import PatchCollection
+from matplotlib.animation import FFMpegWriter
 
 
 ""
@@ -140,44 +141,50 @@ def getStereographic(latitude, tilt, hour):
 
 ""
 latitudes = [90,0,-90]
-timesOfYear = {"winter solstice":-np.pi/2.,"equinox":0.,"summer solstice":np.pi/2.}
-magVmin, magVmax = 5, 8
-fig, axs = plt.subplots(len(latitudes),len(timesOfYear),squeeze=False, figsize=(2+4*len(timesOfYear),4*len(latitudes)))
-cm = plt.cm.get_cmap('viridis_r')
-for i, latitude in enumerate(latitudes):
-    axs[i,0].set_ylabel("Latitude: %.0f"%latitude)
-    for j, timeOfYear in enumerate(timesOfYear):
-        axs[0,j].set_title(timeOfYear)
-        ax = axs[i,j]
-        ax.set_aspect("equal")
-        plot_size = 1.14
-        ax.set_xlim(-plot_size,plot_size)
-        ax.set_ylim(-plot_size,plot_size)
-        ax.get_xaxis().set_ticks([])
-        ax.get_yaxis().set_ticks([])
-        ax.spines['left'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        
-        circle = plt.Circle((0, 0), 1)
-        coll = PatchCollection([circle], zorder=-10, color="black")
-        ax.add_collection(coll)
-        
+hours = np.linspace(-5,5,100,endpoint=True)
+for k, hour in enumerate(hours):
+    timesOfYear = {"winter solstice":-np.pi/2.,"equinox":0.,"summer solstice":np.pi/2.}
+    magVmin, magVmax = 5, 8
+    fig, axs = plt.subplots(len(latitudes),len(timesOfYear),squeeze=False, figsize=(2+4*len(timesOfYear),4*len(latitudes)))
+    cm = plt.cm.get_cmap('viridis_r')
+    for i, latitude in enumerate(latitudes):
+        axs[i,0].set_ylabel("Latitude: %.0f"%latitude)
+        for j, timeOfYear in enumerate(timesOfYear):
+            axs[0,j].set_title(timeOfYear)
+            ax = axs[i,j]
+            ax.set_aspect("equal")
+            plot_size = 1.14
+            ax.set_xlim(-plot_size,plot_size)
+            ax.set_ylim(-plot_size,plot_size)
+            ax.get_xaxis().set_ticks([])
+            ax.get_yaxis().set_ticks([])
+            ax.spines['left'].set_visible(False)
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.spines['bottom'].set_visible(False)
 
-        tilt = 23.4*np.sin(timesOfYear[timeOfYear])
-        xyzf_stereographic, magV = getStereographic(latitude/180.*np.pi, tilt/180.*np.pi,0.)
-        im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=2, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
-        
-        card_pos = 1.07
-        ax.text(0,card_pos, "N",ha="center",va="center",weight="bold")
-        ax.text(0,-card_pos, "S",ha="center",va="center",weight="bold")
-        ax.text(card_pos,0, "W",ha="center",va="center",weight="bold")
-        ax.text(-card_pos,0, "E",ha="center",va="center",weight="bold")
-        ax.text(-1,0.85,"N=%d"%len(xyzf_stereographic))
-fig.suptitle("Midnight", fontsize=16)
-fig.tight_layout()
-fig.colorbar(im,ax=axs.ravel().tolist(),label="magV");
+            circle = plt.Circle((0, 0), 1)
+            coll = PatchCollection([circle], zorder=-10, color="black")
+            ax.add_collection(coll)
+
+
+            tilt = 23.4*np.sin(timesOfYear[timeOfYear])
+
+            xyzf_stereographic, magV = getStereographic(latitude/180.*np.pi, tilt/180.*np.pi,hour/12.*np.pi)
+            im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
+
+            card_pos = 1.07
+            ax.text(0,card_pos, "N",ha="center",va="center",weight="bold")
+            ax.text(0,-card_pos, "S",ha="center",va="center",weight="bold")
+            ax.text(card_pos,0, "W",ha="center",va="center",weight="bold")
+            ax.text(-card_pos,0, "E",ha="center",va="center",weight="bold")
+            ax.text(-1,0.85,"N=%d"%len(xyzf_stereographic))
+    fig.suptitle("Midnight %+.1fh"%hour, fontsize=16)
+    fig.tight_layout()
+    fig.colorbar(im,ax=axs.ravel().tolist(),label="magV");
+    fig.savefig("plot_%50d.png"%k)
+
+""
 
 
 ""
