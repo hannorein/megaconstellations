@@ -1,16 +1,20 @@
 import rebound
+import KeplerTools as KT
 import numpy as np
 import matplotlib.pylab as plt
 
-
 ""
+import rebound
 def getXYZVVV(M, a, omega, e, Omega, inc, m0, m1):
     sim = rebound.Simulation()
     sim.add(m=m0)
-    sim.add(M=M,a=a,omega=omega,e=e,Omega=Omega,m=m1)
-    p1 = sim.particles[1]
-    return [p1.x, p1.y, p1.z, p1.vx, p1.vy, p1.vz]
+    sim.add(M=M,a=a,omega=omega,e=e,Omega=Omega,m=m1,inc=inc)
+    return sim.particles[1].xyz + sim.particles[1].vxyz
 
+
+""
+print(getXYZVVV(1.0, 4.4827105614973265e-05, 0, 0, 0.0, 0.5235987755982988, 5.97e+24, 0.0)[0:3])
+print(KT.getXYZVVV(1.0, 4.4827105614973265e-05, 0, 0, 0.0, 0.5235987755982988, 5.97e+24, 0.0)[0:3])
 
 ####################
 # Written by Aaron Boley, June 2021
@@ -233,7 +237,7 @@ for ilat,lat in enumerate(lats):
         angle = np.abs(np.arccos(dotprod/(obslen*satlen)))
         flag = angle < horizonlimit
         for fg in flag: 
-          if fg: count[ilat][ihr]+=1.
+            if fg: count[ilat][ihr]+=1.
 
 count/=NAVG
 
@@ -259,45 +263,45 @@ zl=np.array(zl)
 #ax.scatter(xl,yl,zl,s=1)
 
 
-print(len(hours),len(lats),len(count),len(count[0]))
+#print(len(hours),len(lats),len(count),len(count[0]))
 #add in sunset times
 lat1 = np.arange(-65.6,65.6,0.1)
 lat = lat1*np.pi/180.
 hrrise = -np.arccos( np.cos(90.833*np.pi/180.)/(np.cos(lat) * np.cos(tilt))-np.tan(lat) * np.tan(tilt) ) * 12./np.pi
 if tilt<0:
-  hrrise = np.append(-12,np.append(hrrise,0.))
-  lat2 = np.append(lat1[0],np.append(lat1,lat1[-1]))
+    hrrise = np.append(-12,np.append(hrrise,0.))
+    lat2 = np.append(lat1[0],np.append(lat1,lat1[-1]))
 elif tilt>0: 
-  hrrise = np.append(0.,np.append(hrrise,-12.))
-  lat2 = np.append(lat1[0],np.append(lat1,lat1[-1]))
+    hrrise = np.append(0.,np.append(hrrise,-12.))
+    lat2 = np.append(lat1[0],np.append(lat1,lat1[-1]))
 else:
-  hrrise = np.append([-12,hrrise[0]],np.append(hrrise,[hrrise[-1],0.]))
-  lat2 = np.append([-70.,-70.],np.append(lat1,[70.,70.]))
-print(lat2)
-print(hrrise)
-print(tilt)
+    hrrise = np.append([-12,hrrise[0]],np.append(hrrise,[hrrise[-1],0.]))
+    lat2 = np.append([-70.,-70.],np.append(lat1,[70.,70.]))
+#print(lat2)
+#print(hrrise)
+#print(tilt)
 plt.figure()
 lats*=180/np.pi
 cb=plt.contourf(hours,lats,count,levels=255)
 plt.contour(hours,lats,count,levels=20,colors='white',linewidths=0.5)
 if tilt<0:
-  print('tilt<0')
-  plt.plot(hrrise, lat2, '-', c='#6E6E6E', lw=2.)
-  plt.plot(-hrrise, lat2, '-', c='#6E6E6E', lw=2.)
-  plt.fill_between(-hrrise,lat2,np.zeros(len(lat2))+70.,facecolor='#BDBDBD',edgecolor='None',alpha=0.6)
-  plt.fill_between(hrrise,np.zeros(len(lat2))+70.,lat2,facecolor='#BDBDBD',edgecolor='None',alpha=0.6)
+    print('tilt<0')
+    plt.plot(hrrise, lat2, '-', c='#6E6E6E', lw=2.)
+    plt.plot(-hrrise, lat2, '-', c='#6E6E6E', lw=2.)
+    plt.fill_between(-hrrise,lat2,np.zeros(len(lat2))+70.,facecolor='#BDBDBD',edgecolor='None',alpha=0.6)
+plt.fill_between(hrrise,np.zeros(len(lat2))+70.,lat2,facecolor='#BDBDBD',edgecolor='None',alpha=0.6)
 if tilt>0: 
-  print('tilt>0')
-  plt.plot(hrrise, lat2, '-', c='#6E6E6E', lw=2.)
-  plt.plot(-hrrise, lat2, '-', c='#6E6E6E', lw=2.)
-  plt.fill_between(-hrrise,np.zeros(len(lat2))-70.,lat2,facecolor='#BDBDBD',edgecolor='None',alpha=0.5)
-  plt.fill_between(hrrise,lat2,np.zeros(len(lat2))-70.,facecolor='#BDBDBD',edgecolor='None',alpha=0.5)
+    print('tilt>0')
+    plt.plot(hrrise, lat2, '-', c='#6E6E6E', lw=2.)
+    plt.plot(-hrrise, lat2, '-', c='#6E6E6E', lw=2.)
+    plt.fill_between(-hrrise,np.zeros(len(lat2))-70.,lat2,facecolor='#BDBDBD',edgecolor='None',alpha=0.5)
+    plt.fill_between(hrrise,lat2,np.zeros(len(lat2))-70.,facecolor='#BDBDBD',edgecolor='None',alpha=0.5)
 if tilt==0: 
-  print('tilt=0')
-  plt.plot(hrrise, lat2, '-', c='#6E6E6E', lw=2.)
-  plt.plot(-hrrise, lat2, '-', c='#6E6E6E', lw=2.)
-  plt.fill_between(-hrrise,np.zeros(len(lat2))+70.,lat2,facecolor='#BDBDBD',edgecolor='None',alpha=0.5)
-  plt.fill_between(hrrise,lat2,np.zeros(len(lat2))+70.,facecolor='#BDBDBD',edgecolor='None',alpha=0.5)
+    print('tilt=0')
+    plt.plot(hrrise, lat2, '-', c='#6E6E6E', lw=2.)
+    plt.plot(-hrrise, lat2, '-', c='#6E6E6E', lw=2.)
+    plt.fill_between(-hrrise,np.zeros(len(lat2))+70.,lat2,facecolor='#BDBDBD',edgecolor='None',alpha=0.5)
+    plt.fill_between(hrrise,lat2,np.zeros(len(lat2))+70.,facecolor='#BDBDBD',edgecolor='None',alpha=0.5)
 
 plt.title(TITLE1)
 plt.xlabel("Hours Since Midnight")
