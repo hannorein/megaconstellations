@@ -2,6 +2,7 @@ import rebound
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pylab as plt
+from matplotlib.collections import PatchCollection
 
 
 ""
@@ -94,57 +95,78 @@ def rotZ(xyz,alpha):
 
 
 ""
-timeOfYear = 0. # in rad
-def getStereographic(latitude, tilt):
+def getStereographic(latitude, tilt, hour):
     sun = np.array([-1.4959787e+11,0,0]) # in m
-    earth = np.array([0,0,0])
-    obs_n = np.array([np.cos(latitude),0,np.sin(latitude)])
-    obs = obs_n * REarth    
+    sun = rotY(sun, tilt)
+    sun_n = sun/np.linalg.norm(sun)
+    
+    obs = np.array([REarth, 0, 0])
+    obs = rotY(obs, -latitude)
+    obs = rotZ(obs, hour)
+    obs_n = obs/np.linalg.norm(obs)
     
     xyz = np.zeros((sim.N,3),dtype="float64")
     sim.serialize_particle_data(xyz=xyz)
     xyz = xyz[1:] # remove earth    
-    xyz = rotY(xyz, EarthTilt)
-    xyz = rotZ(xyz, timeOfYear)
+
+    lit = np.linalg.norm(np.cross(xyz,sun_n),axis=1)>REarth
     
-    lit = np.logical_or(xyz[:,0]<0,np.linalg.norm(xyz[:,1:3],axis=1)>REarth)
-    xyz = xyz[lit] 
+    xyz = xyz[lit]
     
-    xyz = xyz - obs
-    xyz_d = np.linalg.norm(xyz,axis=1)
-    xyz_n = xyz/xyz_d[:,np.newaxis]
+    xyz_n = xyz/np.linalg.norm(xyz,axis=1)[:,np.newaxis]
+    xyz_r = xyz - obs
+    xyz_rd = np.linalg.norm(xyz_r,axis=1)
+    xyz_rn = xyz_r/xyz_rd[:,np.newaxis]
     
-    phase = np.arccos(np.clip(xyz_n[:,0], -1.0, 1.0)) # assume sun is in -x direction
+    phase = np.arccos(np.clip(np.dot(xyz_rn, sun_n), -1.0, 1.0)) # assume sun is in -x direction
     
     fac1 = 2/(3*np.pi**2)
-    magV = -26.74 -2.5*np.log10(fac1 * A * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_d)
+    magV = -26.74 -2.5*np.log10(fac1 * A * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
 
+        
+    elevation = np.pi/2.-np.arccos(np.dot(xyz_rn,obs_n))
     
-    xyz_n = rotY(xyz_n,latitude)
-    
-    above_horizon = xyz_n[:,0]>0
-    xyz_n = xyz_n[above_horizon]
-    magV = magV[above_horizon]
-    
-    return xyz_n[:,1:3]/(1.+xyz_n[:,0,np.newaxis]), magV
+    xyz = rotZ(xyz, -hour)
+    xyz = rotY(xyz, latitude)
+    xyz_r = xyz - np.array([REarth, 0, 0])
+    xyz_rd = np.linalg.norm(xyz_r,axis=1)
+    xyz_rn = xyz_r/xyz_rd[:,np.newaxis]
+
+    xyz_rn = xyz_rn[elevation>0.]
+    magV = magV[elevation>0.]
+
+
+    return xyz_rn[:,1:3]/(1.+xyz_rn[:,0,np.newaxis]), magV
 
 ""
-latitudes = [90,40,0]
-hours = [0,10]
-magVmin, magVmax = 4, 8
-fig, axs = plt.subplots(len(latitudes),len(hours),squeeze=False, figsize=(4*len(hours),4*len(latitudes)))
-cm = plt.cm.get_cmap('viridis')
+latitudes = [90,0,-90]
+timesOfYear = {"winter solstice":-np.pi/2.,"equinox":0.,"summer solstice":np.pi/2.}
+magVmin, magVmax = 5, 8
+fig, axs = plt.subplots(len(latitudes),len(timesOfYear),squeeze=False, figsize=(2+4*len(timesOfYear),4*len(latitudes)))
+cm = plt.cm.get_cmap('viridis_r')
 for i, latitude in enumerate(latitudes):
     axs[i,0].set_ylabel("Latitude: %.0f"%latitude)
-    for j, hour in enumerate(hours):
-        axs[0,j].set_title("Hour: %.0f"%hour)
+    for j, timeOfYear in enumerate(timesOfYear):
+        axs[0,j].set_title(timeOfYear)
         ax = axs[i,j]
         ax.set_aspect("equal")
         plot_size = 1.14
         ax.set_xlim(-plot_size,plot_size)
         ax.set_ylim(-plot_size,plot_size)
+        ax.get_xaxis().set_ticks([])
+        ax.get_yaxis().set_ticks([])
+        ax.spines['left'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
         
-        xyzf_stereographic, magV = getStereographic(latitude/180.*np.pi, tilt/180.*np.pi)
+        circle = plt.Circle((0, 0), 1)
+        coll = PatchCollection([circle], zorder=-10, color="black")
+        ax.add_collection(coll)
+        
+
+        tilt = 23.4*np.sin(timesOfYear[timeOfYear])
+        xyzf_stereographic, magV = getStereographic(latitude/180.*np.pi, tilt/180.*np.pi,0.)
         im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=2, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
         
         card_pos = 1.07
@@ -152,35 +174,11 @@ for i, latitude in enumerate(latitudes):
         ax.text(0,-card_pos, "S",ha="center",va="center",weight="bold")
         ax.text(card_pos,0, "W",ha="center",va="center",weight="bold")
         ax.text(-card_pos,0, "E",ha="center",va="center",weight="bold")
-        circle1 = plt.Circle((0, 0), 1, fill=False)
-        ax.add_patch(circle1)
-        ax.text(-1,1,"N=%d"%len(xyzf_stereographic))
-#fig.tight_layout()
+        ax.text(-1,0.85,"N=%d"%len(xyzf_stereographic))
+fig.suptitle("Midnight", fontsize=16)
+fig.tight_layout()
 fig.colorbar(im,ax=axs.ravel().tolist(),label="magV");
 
-
-""
-np.logical_or(xyzr[:,0]<0,np.linalg.norm(xyzr[:,1:3],axis=1)>REarth)
-
-""
-np.linalg.norm(xyzr[:,1:3],axis=1)>REarth
-
-""
-np.linalg.norm(xyzr[:,1:3],axis=1)
-
-""
-obs_n = np.array([np.cos(latitude),0,np.sin(latitude)])
-obs = obs_n * REarth
-
-""
-xyz.shape
-xyz_n = xyz/np.linalg.norm(xyz,axis=1)[:,np.newaxis]
-
-""
-angle = np.arccos(np.clip(np.dot(xyz_n, obs_n), -1.0, 1.0))
-
-""
-angle[3212]
 
 ""
 
