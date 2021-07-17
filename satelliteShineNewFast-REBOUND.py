@@ -1,7 +1,16 @@
-import keplertools as KT
+import rebound
 import numpy as np
 import matplotlib.pylab as plt
-from mpl_toolkits.mplot3d import Axes3D
+
+
+""
+def getXYZVVV(M, a, omega, e, Omega, inc, m0, m1):
+    sim = rebound.Simulation()
+    sim.add(m=m0)
+    sim.add(M=M,a=a,omega=omega,e=e,Omega=Omega,m=m1)
+    p1 = sim.particles[1]
+    return [p1.x, p1.y, p1.z, p1.vx, p1.vy, p1.vz]
+
 
 ####################
 # Written by Aaron Boley, June 2021
@@ -84,13 +93,13 @@ ICs.append({'NPLANES':28,'SATPP':28,'INC':33,'ALT':509})
 
 #lats = [-60,-50,-40,-30,-20,-10,0,10,20,30,40,50,60]
 lats = np.linspace(-70,70,141)
-print(lats)
+#print(lats)
 
 lats = np.array(lats)*twopi/360.
 hours = np.linspace(-12,12,48)
-print(hours)
+#print(hours)
 hang = hours*twopi/24.
-print(hang)
+#print(hang)
 
 horizonlimit=(90-ELMIN)*twopi/360.
 
@@ -121,83 +130,83 @@ def RotateY(x,y,z,a):
 
 
 for ic in ICs:
-   nplanes=ic['NPLANES']
-   nsat=ic['SATPP']
-   ntot=nplanes*nsat
-   print(nsat)
-   sma = (ic['ALT']+REkm)/aukm
+    nplanes=ic['NPLANES']
+    nsat=ic['SATPP']
+    ntot=nplanes*nsat
+    #print(nsat)
+    sma = (ic['ALT']+REkm)/aukm
 
-   if nsat==1:
-     dplane = twopi/ntot
-     ma = np.linspace(0,twopi,ntot,endpoint=False)
-     colat = np.pi*0.5-ic['INC']*np.pi/180
-     angOpt = np.sqrt( (np.cos(colat)-np.cos(colat+np.pi*0.5))*twopi/ntot)
+    if nsat==1:
+        dplane = twopi/ntot
+        ma = np.linspace(0,twopi,ntot,endpoint=False)
+        colat = np.pi*0.5-ic['INC']*np.pi/180
+        angOpt = np.sqrt( (np.cos(colat)-np.cos(colat+np.pi*0.5))*twopi/ntot)
 
-     mashuf=np.zeros(ntot)
+        mashuf=np.zeros(ntot)
   
-     nmix=int(np.sqrt(ntot))
+        nmix=int(np.sqrt(ntot))
   
-     iref=0
-     iskip=0
-     for i in range(ntot):
-       imix = iref+iskip*nmix
-       if imix>ntot-1:
-          iref+=1
-          iskip=0
-          imix=iref*1
-       mashuf[i] = ma[imix]*1
-       iskip+=1
+        iref=0
+        iskip=0
+        for i in range(ntot):
+            imix = iref+iskip*nmix
+            if imix>ntot-1:
+                iref+=1
+                iskip=0
+                imix=iref*1
+            mashuf[i] = ma[imix]*1
+            iskip+=1
+   
+        isum=0
+        for ilocal in range(nsat):
+            for iplane in range(nplanes):
+                Omega = iplane*dplane
+                x0,y0,z0,vx,vy,vz = getXYZVVV(mashuf[isum],sma,0,0,Omega,ic['INC']*np.pi/180.,m0=MEarth,m1=0.)
+                x0*=au
+                y0*=au
+                z0*=au
 
-     isum=0
-     for ilocal in range(nsat):
-        for iplane in range(nplanes):
-            Omega = iplane*dplane
-            x0,y0,z0,vx,vy,vz = KT.getXYZVVV(mashuf[isum],sma,0,0,Omega,ic['INC']*np.pi/180.,m0=MEarth,m1=0.)
-            x0*=au
-            y0*=au
-            z0*=au
+                x,y,z= RotateY(x0,y0,z0,tilt)
+                xa.append(x)
+                ya.append(y)
+                za.append(z)
+                OK=1
+                if np.sqrt(y*y+z*z)<REarth:
+                    if x > 0: OK=0
+                if OK:
+                    xl.append(x)
+                    yl.append(y)
+                    zl.append(z)
+                isum+=1
+    else:
+        dplane=twopi/nplanes
+        mashuf = np.linspace(0,twopi,nsat,endpoint=False)
+        #print("Simple approach")
+        for ilocal in range(nsat):
+            for iplane in range(nplanes):
+                Omega = iplane*dplane
+                #print(ilocal,iplane,Omega,nsat,nplanes)
+                x0,y0,z0,vx,vy,vz = getXYZVVV(mashuf[ilocal]+iplane*dplane/nplanes,sma,0,0,Omega,ic['INC']*np.pi/180.,m0=MEarth,m1=0.)
+                x0*=au
+                y0*=au
+                z0*=au
 
-            x,y,z= RotateY(x0,y0,z0,tilt)
-            xa.append(x)
-            ya.append(y)
-            za.append(z)
-            OK=1
-            if np.sqrt(y*y+z*z)<REarth:
-              if x > 0: OK=0
-            if OK:
-              xl.append(x)
-              yl.append(y)
-              zl.append(z)
-            isum+=1
-   else:
-     dplane=twopi/nplanes
-     mashuf = np.linspace(0,twopi,nsat,endpoint=False)
-     print("Simple approach")
-     for ilocal in range(nsat):
-          for iplane in range(nplanes):
-              Omega = iplane*dplane
-              print(ilocal,iplane,Omega,nsat,nplanes)
-              x0,y0,z0,vx,vy,vz = KT.getXYZVVV(mashuf[ilocal]+iplane*dplane/nplanes,sma,0,0,Omega,ic['INC']*np.pi/180.,m0=MEarth,m1=0.)
-              x0*=au
-              y0*=au
-              z0*=au
-
-              x,y,z= RotateY(x0,y0,z0,tilt)
-              xa.append(x)
-              ya.append(y)
-              za.append(z)
-              OK=1
-              if np.sqrt(y*y+z*z)<REarth:
-                if x > 0: OK=0
-              if OK:
-                xl.append(x)
-                yl.append(y)
-                zl.append(z)
+                x,y,z= RotateY(x0,y0,z0,tilt)
+                xa.append(x)
+                ya.append(y)
+                za.append(z)
+                OK=1
+                if np.sqrt(y*y+z*z)<REarth:
+                    if x > 0: OK=0
+                if OK:
+                    xl.append(x)
+                    yl.append(y)
+                    zl.append(z)
 
 
 #print("POS",x,y,z)
 
-print(len(xa)/NAVG)
+#print(len(xa)/NAVG)
 
 xl0=np.array(xl)
 yl0=np.array(yl)
@@ -348,9 +357,6 @@ plt.show()
 
 
 
-
-""
-# ?keplertools
 
 ""
 
