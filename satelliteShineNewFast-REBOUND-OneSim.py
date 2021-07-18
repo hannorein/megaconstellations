@@ -292,7 +292,7 @@ for k, hour in enumerate(hours):
     plt.close(fig)
 
 ""
-# !ffmpeg -y -f image2 -i plot_%05d.png -vcodec libx264 -crf 18  -pix_fmt yuv420p test.mp4 && open test.mp4
+# !ffmpeg -y -f image2 -i plot_%05d.png -vf "crop=trunc(iw/2)*2:trunc(ih/2)*2" -vcodec libx264 -crf 18  -pix_fmt yuv420p test.mp4 && open test.mp4
 
 ""
 
