@@ -2,6 +2,7 @@
 import rebound
 import numpy as np
 import numpy.ma as ma
+import matplotlib
 import matplotlib.pylab as plt
 from matplotlib.collections import PatchCollection
 import matplotlib.transforms as transforms
@@ -199,13 +200,13 @@ def getFig(hour):
             xyzf_stereographic, magV = getStereographic(latitude/180.*np.pi, tilt/180.*np.pi, hour/12.*np.pi)
             im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
             #im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4,color="r")
-            card_pos = 1.06
-            ax.text(0,card_pos, "N",ha="center",va="center",weight="bold")
-            ax.text(0,-card_pos, "S",ha="center",va="center",weight="bold")
-            ax.text(card_pos,0, "W",ha="center",va="center",weight="bold")
-            ax.text(-card_pos,0, "E",ha="center",va="center",weight="bold")
-            ax.text(-1,0.85,"N=%d"%len(xyzf_stereographic))
-    fig.suptitle("Midnight %+.1fh"%hour, fontsize=16)
+            card_pos = 1.11
+            ax.text(0,card_pos, "N",ha="center",va="center")
+            ax.text(0,-card_pos, "S",ha="center",va="center")
+            ax.text(card_pos,0, "W",ha="center",va="center")
+            ax.text(-card_pos,0, "E",ha="center",va="center")
+            ax.text(-1.11,0.95,"N=%d"%len(xyzf_stereographic))
+    #fig.suptitle("Midnight %+.1fh"%hour, fontsize=16)
     fig.tight_layout()
     
     
@@ -254,17 +255,20 @@ def getFig(hour):
     ax.set_theta_offset(np.pi/2)
     ax.grid(None)
     ax.get_yaxis().set_visible(False)
-    ax.annotate("", xy=(hour/12*np.pi*2., 0.8),xytext=(0,0),arrowprops=dict(arrowstyle="wedge",
+    ax.annotate("", xy=(hour/12*np.pi*2., 0.7),xytext=(0,0),arrowprops=dict(arrowstyle="wedge",
                             connectionstyle="arc3",fc="black",mutation_scale=20))
     mins = np.fmod(hour*60.,60.)
-    ax.annotate("", xy=(mins/60.*np.pi*2., 0.9),xytext=(0,0),arrowprops=dict(arrowstyle="wedge",
+    ax.annotate("", xy=(mins/60.*np.pi*2., 0.96),xytext=(0,0),arrowprops=dict(arrowstyle="wedge",
                             connectionstyle="arc3",fc="black",mutation_scale=10))
 
     ax.scatter(0, 0, s=200, facecolors='k')
+    ax.text(np.pi, 0.4, "Local time", ha="center")
 
     
     return fig
-getFig(3);
+matplotlib.rcParams.update({'font.size': 18})
+fig = getFig(-2.5);
+#fig.savefig("plot_00000.png", facecolor="white", dpi=200,bbox_inches='tight')
 
 ""
 
@@ -284,7 +288,7 @@ for k, hour in enumerate(hours):
         sim.step()
     fig = getFig(hour)
 
-    fig.savefig("plot_%05d.png"%k, facecolor="white", dpi=200)
+    fig.savefig("plot_%05d.png"%k, facecolor="white", dpi=200,bbox_inches='tight')
     plt.close(fig)
 
 ""
@@ -293,21 +297,6 @@ for k, hour in enumerate(hours):
 ""
 
 
-
-""
-hours = np.linspace(-4,4,1000)
-mins = np.fmod(hours*60.,60.)
-plt.plot(hours,hours)
-plt.plot(hours,mins)
-
-""
-
-
-""
-
-
-""
-np.linspace(0,np.pi*2.,4,endpoint=False)
 
 ""
 
