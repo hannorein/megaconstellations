@@ -5,6 +5,7 @@ import numpy.ma as ma
 import matplotlib.pylab as plt
 from matplotlib.collections import PatchCollection
 import matplotlib.transforms as transforms
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 ""
@@ -181,8 +182,15 @@ def getFig(hour):
             ax.spines['right'].set_visible(False)
             ax.spines['bottom'].set_visible(False)
 
+            # Background
             circle = plt.Circle((0, 0), 1)
             coll = PatchCollection([circle], zorder=-10, color="black")
+            ax.add_collection(coll)
+            
+            # 30 degree 
+            elevation = 30
+            circle = plt.Circle((0, 0), np.cos(elevation/180.*np.pi)/(1.+np.sin(elevation/180.*np.pi)))
+            coll = PatchCollection([circle], zorder=3,edgecolor="dimgray",facecolor="none")
             ax.add_collection(coll)
 
 
@@ -199,14 +207,20 @@ def getFig(hour):
             ax.text(-1,0.85,"N=%d"%len(xyzf_stereographic))
     fig.suptitle("Midnight %+.1fh"%hour, fontsize=16)
     fig.tight_layout()
-    cb = fig.colorbar(im,ax=axs.ravel().tolist(),label="magV",extend="both");
+    
+    
+
+    pos = axs[-1][-1].get_position()
+    size = pos.ymax-pos.ymin
+    
+    ax = fig.add_axes([pos.xmax + 0.5*size, pos.ymin, 0.1*size, (len(latitudes)-1)* size ])    
+    cb = fig.colorbar(im,cax=ax,label="magV",extend="both");
     
     cb.ax.yaxis.set_ticks_position('left')
     cb.ax.yaxis.set_label_position('left')
 
 
-    trans = transforms.blended_transform_factory(
-    cb.ax.transAxes, cb.ax.transData)
+    trans = transforms.blended_transform_factory(cb.ax.transAxes, cb.ax.transData)
     x = 1.2
     ha = "left"
     cb.ax.annotate("", xy=(x+0.2, 6.3),xytext=(x+0.2, 6.48),ha=ha,arrowprops=dict(arrowstyle="simple",
@@ -217,6 +231,36 @@ def getFig(hour):
     cb.ax.annotate("Vesta\n(max)", xy=(x,5.02),zorder=10,ha=ha,xycoords=trans)
     cb.ax.annotate("M33", xy=(x,5.72),zorder=10,ha=ha,xycoords=trans)
     cb.ax.annotate("M81", xy=(x,6.9),zorder=10,ha=ha,xycoords=trans)
+
+    
+    pos = axs[0][-1].get_position()   
+    size = 0.9*(pos.ymax-pos.ymin)
+
+    ax = fig.add_axes([pos.xmax + 0.1*size, pos.ymin+0.05*size, size, size ],polar=True)    
+    marks = np.linspace(360./12,360,12, endpoint=True)
+    ax.set_thetagrids(marks,map(lambda m: int(m/30),marks))
+    ax.tick_params(pad=-32)
+    for item in ax.get_xticklabels():
+        item.set_fontsize(15)
+    tick = [ax.get_rmax(),ax.get_rmax()*0.97]
+    smallticks = np.linspace(0,np.pi*2.,12*5,endpoint=False)
+    for t in smallticks:
+        ax.plot([t,t], tick, lw=2, color="k")
+    tick = [ax.get_rmax(),ax.get_rmax()*0.97]
+    smallticks = np.linspace(0,np.pi*2.,12,endpoint=False)
+    for t in smallticks:
+        ax.plot([t,t], tick, lw=4, color="k")
+    ax.set_theta_direction(-1)
+    ax.set_theta_offset(np.pi/2)
+    ax.grid(None)
+    ax.get_yaxis().set_visible(False)
+    ax.annotate("", xy=(hour/12*np.pi*2., 0.8),xytext=(0,0),arrowprops=dict(arrowstyle="wedge",
+                            connectionstyle="arc3",fc="black",mutation_scale=20))
+    mins = np.fmod(hour*60.,60.)
+    ax.annotate("", xy=(mins/60.*np.pi*2., 0.9),xytext=(0,0),arrowprops=dict(arrowstyle="wedge",
+                            connectionstyle="arc3",fc="black",mutation_scale=10))
+
+    ax.scatter(0, 0, s=200, facecolors='k')
 
     
     return fig
@@ -251,13 +295,19 @@ for k, hour in enumerate(hours):
 
 
 ""
-
+hours = np.linspace(-4,4,1000)
+mins = np.fmod(hours*60.,60.)
+plt.plot(hours,hours)
+plt.plot(hours,mins)
 
 ""
 
 
 ""
 
+
+""
+np.linspace(0,np.pi*2.,4,endpoint=False)
 
 ""
 
