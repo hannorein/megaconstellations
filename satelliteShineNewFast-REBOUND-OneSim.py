@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import rebound
 import numpy as np
 import numpy.ma as ma
@@ -21,9 +22,22 @@ A=4. # m^2   -> effective cross section of satellite
 albedo=0.2 # -> effective albedo 
 EarthTilt=23.4 * np.pi/180
 
-ICs=[]
-ICs.append({'NPLANES':7178,'SATPP':1,'INC':30,'ALT':328})
+
+
+sim = rebound.Simulation()
+sim.G = 6.67430e-11
+sim.add(m=MEarth)
+
+if 0:
+    Ntest = 100
+    for i in range(Ntest):
+        sim.add(y=REarth+300e3,x=1.05*REarth*np.cos(i*np.pi*2./Ntest),z=1.05*REarth*np.sin(i*np.pi*2./Ntest))
+        sim.add(y=REarth+300e3,x=.5*REarth*np.cos(i*np.pi*2./Ntest),z=.5*REarth*np.sin(i*np.pi*2./Ntest))
+        sim.add(y=REarth+300e3,x=.25*REarth*np.cos(i*np.pi*2./Ntest),z=.25*REarth*np.sin(i*np.pi*2./Ntest))
+
 if 1:
+    ICs=[]
+    ICs.append({'NPLANES':7178,'SATPP':1,'INC':30,'ALT':328})
     ICs.append({'NPLANES':7178,'SATPP':1,'INC':40,'ALT':334})
     ICs.append({'NPLANES':7178,'SATPP':1,'INC':53,'ALT':345})
     ICs.append({'NPLANES':40,'SATPP':50,'INC':96.9,'ALT':360})
@@ -57,20 +71,17 @@ if 1:
     ICs.append({'NPLANES':36,'SATPP':36,'INC':42,'ALT':610})
     ICs.append({'NPLANES':28,'SATPP':28,'INC':33,'ALT':509})
 
-sim = rebound.Simulation()
-sim.G = 6.67430e-11
-sim.add(m=MEarth)
 
-for ic in ICs:
-    nplanes=ic['NPLANES']
-    nsat=ic['SATPP']
-    sma = ic['ALT']*1000.+REarth
+    for ic in ICs:
+        nplanes=ic['NPLANES']
+        nsat=ic['SATPP']
+        sma = ic['ALT']*1000.+REarth
 
-    dplane=twopi/nplanes
-    for ilocal in range(nsat):
-        for iplane in range(nplanes):
-            Omega = iplane*dplane
-            sim.add(M="uniform",a=sma,omega=0,e=0,Omega=Omega,inc=ic['INC']*np.pi/180.)
+        dplane=twopi/nplanes
+        for ilocal in range(nsat):
+            for iplane in range(nplanes):
+                Omega = iplane*dplane
+                sim.add(M="uniform",a=sma,omega=0,e=0,Omega=Omega,inc=ic['INC']*np.pi/180.)
 
 
 ""
@@ -88,6 +99,13 @@ def rotZ(xyz,alpha):
     c, s = np.cos(alpha), np.sin(alpha)
     M = np.array([[c,-s,0],[s,c,0],[0,0,1]])
     return xyz @ M
+def lengthOfNight(timeOfYear,latitude, p=0):
+    # https://www.ikhebeenvraag.be/mediastorage/FSDocument/171/Forsythe+-+A+model+comparison+for+daylength+as+a+function+of+latitude+and+day+of+year+-+1995.pdf
+    # p=18 for astronomical twilight
+    theta = 2.*np.arctan(0.9671396*np.tan(-timeOfYear/2.+np.pi/4.))
+    phi = np.arcsin(0.39795*np.cos(theta))
+    return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude*np.pi/180.)*np.sin(phi))/(np.cos(latitude*np.pi/180.)*np.cos(phi)))
+    
 
 
 ""
@@ -105,6 +123,7 @@ def getStereographic(latitude, tilt, hour):
     sim.serialize_particle_data(xyz=xyz)
     xyz = xyz[1:] # remove earth    
 
+
     lit = np.linalg.norm(np.cross(xyz,sun_n),axis=1)>REarth
     
     xyz = xyz[lit]
@@ -120,7 +139,7 @@ def getStereographic(latitude, tilt, hour):
     magV = -26.74 -2.5*np.log10(fac1 * A * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
 
         
-    elevation = np.pi/2.-np.arccos(np.dot(xyz_rn,obs_n))
+    elevation = (np.pi/2.-np.arccos(np.dot(xyz_rn,obs_n)))/np.pi*180.
     
     xyz = rotZ(xyz, -hour)
     xyz = rotY(xyz, latitude)
@@ -128,31 +147,29 @@ def getStereographic(latitude, tilt, hour):
     xyz_rd = np.linalg.norm(xyz_r,axis=1)
     xyz_rn = xyz_r/xyz_rd[:,np.newaxis]
 
-    xyz_rn = xyz_rn[elevation>0.]
-    magV = magV[elevation>0.]
+    elevation_cut = 0
+    xyz_rn = xyz_rn[elevation>elevation_cut]
+    magV = magV[elevation>elevation_cut]
 
 
     return xyz_rn[:,1:3]/(1.+xyz_rn[:,0,np.newaxis]), magV
 
+
 ""
-latitudes = [-30,20,-50]
-hours = np.linspace(-7,7,1000,endpoint=True)
-sim.t = 0
-for k, hour in enumerate(hours):
-    if k>0:
-        sim.dt = (hours[k-1]-hours[k])*60*60
-        sim.step()
-    timesOfYear = {"winter solstice":-np.pi/2.,"equinox":0.,"summer solstice":np.pi/2.}
+def getFig(hour):
+    latitudes = {"Equator":0, "Hawaii":20,"Canada":50,"North pole":90.}
+    timesOfYear = {"December solstice":-np.pi/2.,"Equinox":0.,"June solstice":np.pi/2.}
     magVmin, magVmax =5, 8
     fig, axs = plt.subplots(len(latitudes),len(timesOfYear),squeeze=False, figsize=(2+4*len(timesOfYear),4*len(latitudes)))
-    cm = plt.cm.get_cmap('viridis_r')
-    for i, latitude in enumerate(latitudes):
-        axs[i,0].set_ylabel("Latitude: %.0f"%latitude)
+    cm = plt.cm.get_cmap('plasma_r')
+    for i, latitudename in enumerate(latitudes):
+        latitude = latitudes[latitudename]
+        axs[i,0].set_ylabel("Latitude: %.0f° (%s)"%(latitude,latitudename))
         for j, timeOfYear in enumerate(timesOfYear):
             axs[0,j].set_title(timeOfYear)
             ax = axs[i,j]
             ax.set_aspect("equal")
-            plot_size = 1.14
+            plot_size = 1.2
             ax.set_xlim(-plot_size,plot_size)
             ax.set_ylim(-plot_size,plot_size)
             ax.get_xaxis().set_ticks([])
@@ -171,8 +188,8 @@ for k, hour in enumerate(hours):
 
             xyzf_stereographic, magV = getStereographic(latitude/180.*np.pi, tilt/180.*np.pi, hour/12.*np.pi)
             im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
-
-            card_pos = 1.07
+            #im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4,color="r")
+            card_pos = 1.06
             ax.text(0,card_pos, "N",ha="center",va="center",weight="bold")
             ax.text(0,-card_pos, "S",ha="center",va="center",weight="bold")
             ax.text(card_pos,0, "W",ha="center",va="center",weight="bold")
@@ -181,8 +198,45 @@ for k, hour in enumerate(hours):
     fig.suptitle("Midnight %+.1fh"%hour, fontsize=16)
     fig.tight_layout()
     fig.colorbar(im,ax=axs.ravel().tolist(),label="magV");
-    fig.savefig("plot_%05d.png"%k, facecolor="white")
+    return fig
+getFig(-1);
+
+""
+
+
+""
+
+
+""
+
+
+""
+hours = np.linspace(-4,4,1000,endpoint=True)
+sim.t = 0
+for k, hour in enumerate(hours):
+    if k>0:
+        sim.dt = (hours[k-1]-hours[k])*60*60
+        sim.step()
+    fig = getFig(hour)
+
+    fig.savefig("plot_%05d.png"%k, facecolor="white", dpi=200)
     plt.close(fig)
+
+""
+# !ffmpeg -y -f image2 -i plot_%05d.png -vcodec libx264 -crf 18  -pix_fmt yuv420p test.mp4 && open test.mp4
+
+""
+
+
+
+""
+
+
+""
+
+
+""
+
 
 ""
 
