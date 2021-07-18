@@ -4,7 +4,7 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pylab as plt
 from matplotlib.collections import PatchCollection
-from matplotlib.animation import FFMpegWriter
+import matplotlib.transforms as transforms
 
 
 ""
@@ -133,7 +133,7 @@ def getStereographic(latitude, tilt, hour):
     xyz_rd = np.linalg.norm(xyz_r,axis=1)
     xyz_rn = xyz_r/xyz_rd[:,np.newaxis]
     
-    phase = np.arccos(np.clip(np.dot(xyz_rn, sun_n), -1.0, 1.0)) # assume sun is in -x direction
+    phase = np.arccos(np.clip(np.dot(xyz_rn, -sun_n), -1.0, 1.0)) # assume sun is in -x direction
     
     fac1 = 2/(3*np.pi**2)
     magV = -26.74 -2.5*np.log10(fac1 * A * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
@@ -149,6 +149,7 @@ def getStereographic(latitude, tilt, hour):
 
     elevation_cut = 0
     xyz_rn = xyz_rn[elevation>elevation_cut]
+    #magV = phase[elevation>elevation_cut]/np.pi*180.
     magV = magV[elevation>elevation_cut]
 
 
@@ -157,9 +158,10 @@ def getStereographic(latitude, tilt, hour):
 
 ""
 def getFig(hour):
-    latitudes = {"Equator":0, "Hawaii":20,"Canada":50,"North pole":90.}
+    latitudes = {"North pole":90.,"Canada":50, "Hawaii":20,"Equator":0}
     timesOfYear = {"December solstice":-np.pi/2.,"Equinox":0.,"June solstice":np.pi/2.}
     magVmin, magVmax =5, 8
+    #magVmin, magVmax =None, None
     fig, axs = plt.subplots(len(latitudes),len(timesOfYear),squeeze=False, figsize=(2+4*len(timesOfYear),4*len(latitudes)))
     cm = plt.cm.get_cmap('plasma_r')
     for i, latitudename in enumerate(latitudes):
@@ -197,9 +199,28 @@ def getFig(hour):
             ax.text(-1,0.85,"N=%d"%len(xyzf_stereographic))
     fig.suptitle("Midnight %+.1fh"%hour, fontsize=16)
     fig.tight_layout()
-    fig.colorbar(im,ax=axs.ravel().tolist(),label="magV");
+    cb = fig.colorbar(im,ax=axs.ravel().tolist(),label="magV",extend="both");
+    
+    cb.ax.yaxis.set_ticks_position('left')
+    cb.ax.yaxis.set_label_position('left')
+
+
+    trans = transforms.blended_transform_factory(
+    cb.ax.transAxes, cb.ax.transData)
+    x = 1.2
+    ha = "left"
+    cb.ax.annotate("", xy=(x+0.2, 6.3),xytext=(x+0.2, 6.48),ha=ha,arrowprops=dict(arrowstyle="simple",
+                            connectionstyle="arc3",fc="black",mutation_scale=20),xycoords=trans,textcoords=trans)
+    cb.ax.annotate("Naked eye", xy=(x,6.5),zorder=10,ha=ha,xycoords=trans)
+    cb.ax.annotate("Neptune\n(mean)", xy=(x,7.78),zorder=10,ha=ha,xycoords=trans)
+    cb.ax.annotate("Uranus\n(mean)", xy=(x,6.03),zorder=10,ha=ha,xycoords=trans)
+    cb.ax.annotate("Vesta\n(max)", xy=(x,5.02),zorder=10,ha=ha,xycoords=trans)
+    cb.ax.annotate("M33", xy=(x,5.72),zorder=10,ha=ha,xycoords=trans)
+    cb.ax.annotate("M81", xy=(x,6.9),zorder=10,ha=ha,xycoords=trans)
+
+    
     return fig
-getFig(-1);
+getFig(3);
 
 ""
 
