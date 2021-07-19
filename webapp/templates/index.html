@@ -15,10 +15,11 @@
             <p>
             <label for="latitude">Latitude:</label>
             <select name="latitude" id="latitude">
-                <option value="0" {% if latitude==0 %}selected{% endif %}>Equator (0&#176;N)</option>
-                <option value="20" {% if latitude==20 %}selected{% endif %}>Hawaii (20&#176;N)</option>
-                <option value="50" {% if latitude==50 %}selected{% endif %}>Canada (50&#176;M)</option>
                 <option value="90" {% if latitude==90 %}selected{% endif %}>North pole (90&#176;N)</option>
+                <option value="50" {% if latitude==50 %}selected{% endif %}>Canada (50&#176;N)</option>
+                <option value="20" {% if latitude==20 %}selected{% endif %}>Hawaii (20&#176;N)</option>
+                <option value="0" {% if latitude==0 %}selected{% endif %}>Equator (0&#176;)</option>
+                <option value="-30" {% if latitude==-30 %}selected{% endif %}>Chile (30&#176;S)</option>
             </select>
             </p>
             
@@ -50,17 +51,32 @@
             <input type="checkbox" name="constellation" value="{{ key }}" {% if key in enabled_constellations %}checked{% endif %} >{{ constellations[key] }}<br>
             {% endfor %}
             </p>
-            <!-- <input type="submit", value="Generate plot"> -->
+
+            <p>
+            <label for="albedo">Albedo:</label>
+            <input type="range" name="albedo" id="albedo" min="0" max="1" step="0.01" value="{{albedo}}" oninput="this.form.albedotext.value=this.value" />
+            <input type="number" name="albedotext" id="albedotext" min="0" max="1" step="0.01" value="{{albedo}}" oninput="this.form.albedo.value=this.value" />
             </p>
+            <p>
+            <label for="area">Effective area (m&#13217;):</label>
+            <input type="range" name="area" id="area" min="0" max="20" step="0.1" value="{{area}}" oninput="this.form.areatext.value=this.value" />
+            <input type="number" name="areatext" id="areatext" min="0" max="20" step="0.1" value="{{area}}" oninput="this.form.area.value=this.value" />
+            </p>
+
+
+            <!-- <input type="submit", value="Generate plot"> -->
         </form>
         <script>
             $( "#form" ).change(function () {
                             $('#plot').attr('src', '/plot.png?'+$('#form').serialize())
                             })
                 .change();
+            $( document ).ready(function(){
+                            $('#plot').attr('src', '/plot.png?'+$('#form').serialize())
+                        });
         </script>
 
-        <img id="plot" src="./plot.png" />
+        <img id="plot" src="" />
 
     </body>
 </html>

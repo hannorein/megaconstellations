@@ -15,8 +15,6 @@ from matplotlib.figure import Figure
 twopi=np.pi*2
 MEarth = 5.97e24
 REarth = 6378.135e3
-A=4. # m^2   -> effective cross section of satellite
-albedo=0.2 # -> effective albedo
 EarthTilt=23.4 * np.pi/180
 cm = plt.cm.get_cmap('plasma_r')
 
@@ -37,8 +35,10 @@ def hello_world():
     latitude = 50.
     timeofyear = 3
     timeofday = 0.
+    albedo = 0.2
+    area = 4.0
     enabled_constellations = [k for k in constellations.names]
-    return render_template('index.html', latitude=latitude, timeofyear=timeofyear, timeofday=timeofday, constellations=constellations.names, enabled_constellations=enabled_constellations)
+    return render_template('index.html', latitude=latitude, timeofyear=timeofyear, area=area, albedo=albedo, timeofday=timeofday, constellations=constellations.names, enabled_constellations=enabled_constellations)
 
 
 def rotY(xyz,alpha):
@@ -56,7 +56,7 @@ def lengthOfNight(timeOfYear,latitude, p=0):
     phi = np.arcsin(0.39795*np.cos(theta))
     return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude*np.pi/180.)*np.sin(phi))/(np.cos(latitude*np.pi/180.)*np.cos(phi)))
 
-def getStereographic(sim, latitude, tilt, hour):
+def getStereographic(sim, latitude, tilt, hour, albedo=0.2, area=4.):
     sun = np.array([-1.4959787e+11,0,0]) # in m
     sun = rotY(sun, tilt)
     sun_n = sun/np.linalg.norm(sun)
@@ -83,7 +83,7 @@ def getStereographic(sim, latitude, tilt, hour):
     phase = np.arccos(np.clip(np.dot(xyz_rn, -sun_n), -1.0, 1.0)) # assume sun is in -x direction
 
     fac1 = 2/(3*np.pi**2)
-    magV = -26.74 -2.5*np.log10(fac1 * A * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
+    magV = -26.74 -2.5*np.log10(fac1 * area * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
 
 
     elevation = (np.pi/2.-np.arccos(np.dot(xyz_rn,obs_n)))/np.pi*180.
@@ -120,8 +120,14 @@ def plot_png():
         enabled_constellations = request.args.getlist('constellation')
     except:
         enabled_constellations = []
-    if len(enabled_constellations)==0: 
-        enabled_constellations = [k for k in constellations.names]
+    try:
+        albedo = float(request.args.get('albedo'))
+    except:
+        albedo = 0.2
+    try:
+        area = float(request.args.get('area'))
+    except:
+        area = 4.
 
     magVmin, magVmax =5, 8
     fig = Figure()
@@ -158,7 +164,7 @@ def plot_png():
 
     N = 0
     for k in enabled_constellations:
-        xyzf_stereographic, magV = getStereographic(sims[k], latitude/180.*np.pi, tilt/180.*np.pi, timeofday/12.*np.pi)
+        xyzf_stereographic, magV = getStereographic(sims[k], latitude/180.*np.pi, tilt/180.*np.pi, timeofday/12.*np.pi, albedo, area)
         im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
         N += len(xyzf_stereographic);
 
