@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <title>Megaconstellations</title>
     </head>
     <body>
@@ -10,23 +11,23 @@
         <p>{{ message }}</p>
         {% endif %}
 
-        <form action="" method="post">
+        <form id="form" action="" method="post">
             <p>
-            <label for="location">Location:</label>
-            <select name="location" id="location">
-                <option value="0" {% if location==0 %}selected{% endif %}>Equator (0&#176;N)</option>
-                <option value="20" {% if location==20 %}selected{% endif %}>Hawaii (20&#176;N)</option>
-                <option value="50" {% if location==50 %}selected{% endif %}>Canada (50&#176;M)</option>
-                <option value="90" {% if location==90 %}selected{% endif %}>North pole (90&#176;N)</option>
+            <label for="latitude">Latitude:</label>
+            <select name="latitude" id="latitude">
+                <option value="0" {% if latitude==0 %}selected{% endif %}>Equator (0&#176;N)</option>
+                <option value="20" {% if latitude==20 %}selected{% endif %}>Hawaii (20&#176;N)</option>
+                <option value="50" {% if latitude==50 %}selected{% endif %}>Canada (50&#176;M)</option>
+                <option value="90" {% if latitude==90 %}selected{% endif %}>North pole (90&#176;N)</option>
             </select>
             </p>
             
             <p>
             <label for="timeofyear">Time of year:</label>
             <select name="timeofyear" id="timeofyear">
-                <option value="1.5707963" {% if timeofyear==1.5707963 %}selected{% endif %}>June Solstice</option>
+                <option value="3" {% if timeofyear==3 %}selected{% endif %}>June Solstice</option>
                 <option value="0" {% if timeofyear==0.0 %}selected{% endif %}>Equinox</option>
-                <option value="-1.5707963" {% if timeofyear==-1.5707963 %}selected{% endif %}>December Solstice</option>
+                <option value="-3" {% if timeofyear==-3 %}selected{% endif %}>December Solstice</option>
             </select>
             </p>
             
@@ -49,9 +50,17 @@
             <input type="checkbox" name="constellation" value="{{ key }}" {% if key in enabled_constellations %}checked{% endif %} >{{ constellations[key] }}<br>
             {% endfor %}
             </p>
-            <input type="submit", value="Generate plot">
+            <!-- <input type="submit", value="Generate plot"> -->
             </p>
         </form>
+        <script>
+            $( "#form" ).change(function () {
+                            $('#plot').attr('src', '/plot.png?'+$('#form').serialize())
+                            })
+                .change();
+        </script>
+
+        <img id="plot" src="./plot.png" />
 
     </body>
 </html>
