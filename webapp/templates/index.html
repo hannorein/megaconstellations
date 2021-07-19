@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Megaconstellations</title>
+    </head>
+    <body>
+
+        {% if message %}
+        <p>{{ message }}</p>
+        {% endif %}
+
+        <form action="" method="post">
+            <p>
+            <label for="location">Location:</label>
+            <select name="location" id="location">
+                <option value="0" {% if location==0 %}selected{% endif %}>Equator (0&#176;N)</option>
+                <option value="20" {% if location==20 %}selected{% endif %}>Hawaii (20&#176;N)</option>
+                <option value="50" {% if location==50 %}selected{% endif %}>Canada (50&#176;M)</option>
+                <option value="90" {% if location==90 %}selected{% endif %}>North pole (90&#176;N)</option>
+            </select>
+            </p>
+            
+            <p>
+            <label for="timeofyear">Time of year:</label>
+            <select name="timeofyear" id="timeofyear">
+                <option value="1.5707963" {% if timeofyear==1.5707963 %}selected{% endif %}>June Solstice</option>
+                <option value="0" {% if timeofyear==0.0 %}selected{% endif %}>Equinox</option>
+                <option value="-1.5707963" {% if timeofyear==-1.5707963 %}selected{% endif %}>December Solstice</option>
+            </select>
+            </p>
+            
+            <p>
+            <label for="timeofday">Time of day:</label>
+            <select name="timeofday" id="timeofday">
+                <option value="-3" {% if timeofday==-3 %}selected{% endif %}>-3 hour before midnight</option>
+                <option value="-2" {% if timeofday==-2 %}selected{% endif %}>-2 hour before midnight</option>
+                <option value="-1" {% if timeofday==-1 %}selected{% endif %}>-1 hour before midnight</option>
+                <option value="0" {% if timeofday==0 %}selected{% endif %}>Midnight</option>
+                <option value="1" {% if timeofday==1 %}selected{% endif %}>1 hour before midnight</option>
+                <option value="2" {% if timeofday==2 %}selected{% endif %}>2 hour before midnight</option>
+                <option value="3" {% if timeofday==3 %}selected{% endif %}>3 hour before midnight</option>
+            </select>
+            </p>
+            
+            <p>
+            Constellations:<br>
+            {% for key in constellations %}
+            <input type="checkbox" name="constellation" value="{{ key }}" {% if key in enabled_constellations %}checked{% endif %} >{{ constellations[key] }}<br>
+            {% endfor %}
+            </p>
+            <input type="submit", value="Generate plot">
+            </p>
+        </form>
+
+    </body>
+</html>

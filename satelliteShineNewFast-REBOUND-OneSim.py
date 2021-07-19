@@ -158,6 +158,8 @@ def getStereographic(latitude, tilt, hour):
     return xyz_rn[:,1:3]/(1.+xyz_rn[:,0,np.newaxis]), magV
 
 
+np.pi/2.
+
 ""
 def getFig(hour):
     latitudes = {"North pole":90.,"Canada":50, "Hawaii":20,"Equator":0}
