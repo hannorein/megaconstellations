@@ -29,6 +29,7 @@ for constellation in constellations.names:
 
 app = Flask(__name__)
 
+latitudes = {"North pole":90., "Canada":50., "Hawaii":20., "Equator": 0., "Chile":-30., "South pole":-90.};
 
 @app.route("/", methods=['post','get'])
 def hello_world():
@@ -38,7 +39,7 @@ def hello_world():
     albedo = 0.2
     area = 4.0
     enabled_constellations = [k for k in constellations.names]
-    return render_template('index.html', latitude=latitude, timeofyear=timeofyear, area=area, albedo=albedo, timeofday=timeofday, constellations=constellations.names, enabled_constellations=enabled_constellations)
+    return render_template('index.html', latitudes=latitudes, latitude=latitude, timeofyear=timeofyear, area=area, albedo=albedo, timeofday=timeofday, constellations=constellations.names, enabled_constellations=enabled_constellations)
 
 
 def rotY(xyz,alpha):
