@@ -19,27 +19,27 @@ EarthTilt=23.4 * np.pi/180
 cm = plt.cm.get_cmap('plasma_r')
 
 sims = {}
-for constellation in constellations.names:
-    print(constellation)
+for k in constellations.constellations:
+    print(k)
     sim = rebound.Simulation()
     sim.G = 6.67430e-11
     sim.add(m=MEarth)
-    constellations.add_to_sim(sim,constellations.satellites[constellation], debug=False)
-    sims[constellation] = sim
+    constellations.add_to_sim(sim,constellations.constellations[k], debug=False)
+    sims[k] = sim
 
 app = Flask(__name__)
 
 latitudes = {"North pole":90., "Canada":50., "Hawaii":20., "Equator": 0., "Chile":-30., "South pole":-90.};
 
 @app.route("/", methods=['post','get'])
-def hello_world():
+def index():
     latitude = 50.
     timeofyear = 3
     timeofday = 0.
     albedo = 0.2
     area = 4.0
-    enabled_constellations = [k for k in constellations.names]
-    return render_template('index.html', latitudes=latitudes, latitude=latitude, timeofyear=timeofyear, area=area, albedo=albedo, timeofday=timeofday, constellations=constellations.names, enabled_constellations=enabled_constellations)
+    enabled_constellations = [k for k in constellations.constellations]
+    return render_template('index.html', latitudes=latitudes, latitude=latitude, timeofyear=timeofyear, area=area, albedo=albedo, timeofday=timeofday, constellations=constellations.constellations, enabled_constellations=enabled_constellations)
 
 
 def rotY(xyz,alpha):

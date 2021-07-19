@@ -48,8 +48,8 @@
             
             <p>
             Constellations:<br>
-            {% for key in constellations %}
-            <input type="checkbox" name="constellation" value="{{ key }}" {% if key in enabled_constellations %}checked{% endif %} >{{ constellations[key] }}<br>
+            {% for k in constellations %}
+            <input type="checkbox" name="constellation" value="{{ k }}" {% if k in enabled_constellations %}checked{% endif %} >{{ k }}<br>
             {% endfor %}
             </p>
 
@@ -59,7 +59,7 @@
             <input type="number" name="albedotext" id="albedotext" min="0" max="1" step="0.01" value="{{albedo}}" oninput="this.form.albedo.value=this.value" />
             </p>
             <p>
-            <label for="area">Effective area (m&#13217;):</label>
+            <label for="area">Effective area (m&sup2;):</label>
             <input type="range" name="area" id="area" min="0" max="20" step="0.1" value="{{area}}" oninput="this.form.areatext.value=this.value" />
             <input type="number" name="areatext" id="areatext" min="0" max="20" step="0.1" value="{{area}}" oninput="this.form.area.value=this.value" />
             </p>
