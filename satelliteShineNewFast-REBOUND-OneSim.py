@@ -107,7 +107,7 @@ def lengthOfNight(timeOfYear,latitude, p=0):
     theta = 2.*np.arctan(0.9671396*np.tan(-timeOfYear/2.+np.pi/4.))
     phi = np.arcsin(0.39795*np.cos(theta))
     return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude*np.pi/180.)*np.sin(phi))/(np.cos(latitude*np.pi/180.)*np.cos(phi)))
-    
+
 
 
 ""
