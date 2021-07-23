@@ -46,7 +46,7 @@ def add_to_simulation(sim, ICs, debug=False):
         Omegas = np.linspace(0.,2.*np.pi,nplanes)
         for i, Omega in enumerate(Omegas):
             # 5 percent jitter
-            Ms = np.linspace(0.,2.*np.pi,nsat)+ 2.*np.pi/nsat*0.05*np.random.normal(size=nsat)
+            Ms = np.linspace(0.,2.*np.pi,nsat)+ 2.*np.pi/nsat*0.25*np.random.normal(size=nsat)
             for j, M in enumerate(Ms):
                 sim.add(M=M, a=a, omega=0, e=0, Omega=Omega, inc=IC['INC']*np.pi/180.)
                 if debug and sim.N>100:
@@ -68,12 +68,13 @@ def length_of_night(timeOfYear,latitude, p=0):
 
 def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4.):
     latitude = latitude/180.*np.pi 
+    tilt = 23.4*np.sin(month/6.*np.pi)/180.*np.pi
+    hour = hour/12.*np.pi
     if not isinstance(sims, list):
         sims = [sims]
     xy, mag = [], []     
     for sim in sims:
         sun = np.array([-1.4959787e+11,0,0]) # in m
-        tilt = 23.4*np.sin(month/6.*np.pi)/180.*np.pi
         sun = rotY(sun, tilt)
         sun_n = sun/np.linalg.norm(sun)
 
