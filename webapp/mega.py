@@ -66,12 +66,14 @@ def length_of_night(timeOfYear,latitude, p=0):
     phi = np.arcsin(0.39795*np.cos(theta))
     return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude*np.pi/180.)*np.sin(phi))/(np.cos(latitude*np.pi/180.)*np.cos(phi)))
 
-def get_stereographic_data(sims, latitude, tilt, hour, albedo=0.2, area=4.):
+def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4.):
+    latitude = latitude/180.*np.pi 
     if not isinstance(sims, list):
         sims = [sims]
     xy, mag = [], []     
     for sim in sims:
         sun = np.array([-1.4959787e+11,0,0]) # in m
+        tilt = 23.4*np.sin(month/6.*np.pi)/180.*np.pi
         sun = rotY(sun, tilt)
         sun_n = sun/np.linalg.norm(sun)
 
@@ -98,6 +100,7 @@ def get_stereographic_data(sims, latitude, tilt, hour, albedo=0.2, area=4.):
 
         fac1 = 2/(3*np.pi**2)
         magV = -26.74 -2.5*np.log10(fac1 * area * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
+
 
         elevation = (np.pi/2.-np.arccos(np.dot(xyz_rn,obs_n)))/np.pi*180.
 
