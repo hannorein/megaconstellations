@@ -1,3 +1,7 @@
+import os
+os.environ[ 'MPLCONFIGDIR' ] = '/home/rein/megaconstellations/webapp/'
+os.chdir("/home/rein/megaconstellations/webapp/")
+
 from flask import Flask, render_template, request
 import rebound
 import numpy as np
