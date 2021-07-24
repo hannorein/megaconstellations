@@ -67,13 +67,15 @@ def length_of_night(timeOfYear,latitude, p=0):
     return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude*np.pi/180.)*np.sin(phi))/(np.cos(latitude*np.pi/180.)*np.cos(phi)))
 
 def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4.):
+    # latitude in degrees
+    # month in months from spring euquinox
+    # hours in hours since midnight
     latitude = latitude/180.*np.pi 
     tilt = 23.4*np.sin(month/6.*np.pi)/180.*np.pi
     hour = hour/12.*np.pi
-    if not isinstance(sims, list):
-        sims = [sims]
     xy, mag = [], []     
-    for sim in sims:
+    for name in sims:
+        sim = sims[name]
         sun = np.array([-1.4959787e+11,0,0]) # in m
         sun = rotY(sun, tilt)
         sun_n = sun/np.linalg.norm(sun)
@@ -117,13 +119,16 @@ def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, are
 
         xy.append(xyz_rn[:,1:3]/(1.+xyz_rn[:,0,np.newaxis]))
         mag.append(magV)
-    return np.concatenate(xy), np.concatenate(mag) 
+    if len(xy)>0:
+        return np.concatenate(xy), np.concatenate(mag) 
+    else:
+        return None, None
 
 
 def get_simulations(add_constellations=None, use_cache=True):
     if add_constellations is None:
         add_constellations = constellations.keys() # all constellations
-    sims = []
+    sims = {}
     for c in add_constellations:
         if c not in constellations:
             raise RuntimeError("Constellation %s not found."%c)
@@ -143,5 +148,5 @@ def get_simulations(add_constellations=None, use_cache=True):
             add_to_simulation(sim, constellations[c])
             if use_cache:
                 sim.save(filename)
-        sims.append(sim)
+        sims[c] = sim
     return sims

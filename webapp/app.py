@@ -5,45 +5,30 @@ import matplotlib
 import matplotlib.pylab as plt
 from matplotlib.collections import PatchCollection
 import matplotlib.transforms as transforms
-import constellations
+import mega
 import io
 import random
 from flask import Response
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-twopi=np.pi*2
-MEarth = 5.97e24
-REarth = 6378.135e3
-EarthTilt=23.4 * np.pi/180
 cm = plt.cm.get_cmap('plasma_r')
+sims = mega.get_simulations()
 
-sims = {}
-for k in constellations.constellations:
-    print(k)
-    sim = rebound.Simulation()
-    sim.G = 6.67430e-11
-    sim.add(m=MEarth)
-    constellations.add_to_sim(sim,constellations.constellations[k], debug=False)
-    sims[k] = sim
-
-app = Flask(__name__)
+app = Flask(__name__,static_folder='static')
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 latitudes = {"North pole":90., "Canada":50., "Hawaii":20., "Equator": 0., "Chile":-30., "South pole":-90.};
-
-@app.route("/style.css", methods=['get'])
-def style():
-    return render_template('style.css')
 
 @app.route("/", methods=['post','get'])
 def index():
     latitude = 50.
-    timeofyear = 3
-    timeofday = 0.
+    month = 3
+    hour = 0.
     albedo = 0.2
     area = 4.0
-    enabled_constellations = [k for k in constellations.constellations]
-    return render_template('index.html', latitudes=latitudes, latitude=latitude, timeofyear=timeofyear, area=area, albedo=albedo, timeofday=timeofday, constellations=constellations.constellations, enabled_constellations=enabled_constellations)
+    enabled_constellations = [k for k in mega.constellations]
+    return render_template('index.html', latitudes=latitudes, latitude=latitude, month=month, area=area, albedo=albedo, hour=hour, constellations=sims, enabled_constellations=enabled_constellations)
 
 
 def rotY(xyz,alpha):
@@ -61,52 +46,6 @@ def lengthOfNight(timeOfYear,latitude, p=0):
     phi = np.arcsin(0.39795*np.cos(theta))
     return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude*np.pi/180.)*np.sin(phi))/(np.cos(latitude*np.pi/180.)*np.cos(phi)))
 
-def getStereographic(sim, latitude, tilt, hour, albedo=0.2, area=4.):
-    sun = np.array([-1.4959787e+11,0,0]) # in m
-    sun = rotY(sun, tilt)
-    sun_n = sun/np.linalg.norm(sun)
-
-    obs = np.array([REarth, 0, 0])
-    obs = rotY(obs, -latitude)
-    obs = rotZ(obs, hour)
-    obs_n = obs/np.linalg.norm(obs)
-
-    xyz = np.zeros((sim.N,3),dtype="float64")
-    sim.serialize_particle_data(xyz=xyz)
-    xyz = xyz[1:] # remove earth
-
-
-    lit = np.linalg.norm(np.cross(xyz,sun_n),axis=1)>REarth
-
-    xyz = xyz[lit]
-
-    xyz_n = xyz/np.linalg.norm(xyz,axis=1)[:,np.newaxis]
-    xyz_r = xyz - obs
-    xyz_rd = np.linalg.norm(xyz_r,axis=1)
-    xyz_rn = xyz_r/xyz_rd[:,np.newaxis]
-
-    phase = np.arccos(np.clip(np.dot(xyz_rn, -sun_n), -1.0, 1.0)) # assume sun is in -x direction
-
-    fac1 = 2/(3*np.pi**2)
-    magV = -26.74 -2.5*np.log10(fac1 * area * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
-
-
-    elevation = (np.pi/2.-np.arccos(np.dot(xyz_rn,obs_n)))/np.pi*180.
-
-    xyz = rotZ(xyz, -hour)
-    xyz = rotY(xyz, latitude)
-    xyz_r = xyz - np.array([REarth, 0, 0])
-    xyz_rd = np.linalg.norm(xyz_r,axis=1)
-    xyz_rn = xyz_r/xyz_rd[:,np.newaxis]
-
-    elevation_cut = 0
-    xyz_rn = xyz_rn[elevation>elevation_cut]
-    #magV = phase[elevation>elevation_cut]/np.pi*180.
-    magV = magV[elevation>elevation_cut]
-
-
-    return xyz_rn[:,1:3]/(1.+xyz_rn[:,0,np.newaxis]), magV
-
 @app.route('/plot.png')
 def plot_png():
     try:
@@ -114,13 +53,13 @@ def plot_png():
     except:
         latitude = 50.
     try:
-        timeofyear = float(request.args.get('timeofyear')) 
+        month = float(request.args.get('month')) 
     except:
-        timeofyear = 3.
+        month = 3.
     try:
-        timeofday = float(request.args.get('timeofday'))
+        hour = float(request.args.get('hour'))
     except:
-        timeofday = 0.
+        hour = 0.
     try:
         enabled_constellations = request.args.getlist('constellation')
     except:
@@ -165,13 +104,15 @@ def plot_png():
     ax.add_collection(coll)
 
 
-    tilt = 23.4*np.sin(timeofyear/6.*np.pi)
-
     N = 0
+    esims = {}
     for k in enabled_constellations:
-        xyzf_stereographic, magV = getStereographic(sims[k], latitude/180.*np.pi, tilt/180.*np.pi, timeofday/12.*np.pi, albedo, area)
+        esims[k] = sims[k]
+
+    xyzf_stereographic, magV = mega.get_stereographic_data(esims, latitude=latitude, month=month, hour=hour, albedo=albedo, area=area)
+    if xyzf_stereographic is not None:
+        N = len(xyzf_stereographic)
         im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
-        N += len(xyzf_stereographic);
 
     #im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4,color="r")
     card_pos = 1.11
