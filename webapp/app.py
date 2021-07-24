@@ -31,6 +31,10 @@ app = Flask(__name__)
 
 latitudes = {"North pole":90., "Canada":50., "Hawaii":20., "Equator": 0., "Chile":-30., "South pole":-90.};
 
+@app.route("/style.css", methods=['get'])
+def style():
+    return render_template('style.css')
+
 @app.route("/", methods=['post','get'])
 def index():
     latitude = 50.
