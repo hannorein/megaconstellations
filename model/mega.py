@@ -63,12 +63,14 @@ def rotZ(xyz,alpha):
     c, s = np.cos(alpha), np.sin(alpha)
     M = np.array([[c,-s,0],[s,c,0],[0,0,1]])
     return xyz @ M
-def length_of_night(timeOfYear,latitude, p=0):
+
+def length_of_night(month,latitude, p=0):
     # https://www.ikhebeenvraag.be/mediastorage/FSDocument/171/Forsythe+-+A+model+comparison+for+daylength+as+a+function+of+latitude+and+day+of+year+-+1995.pdf
     # p=18 for astronomical twilight
-    theta = 2.*np.arctan(0.9671396*np.tan(-timeOfYear/2.+np.pi/4.))
+    day = month/12*365.25+79
+    theta = 0.2163108+2.*np.arctan(0.9671396*np.tan(0.00860*(day-186)))
     phi = np.arcsin(0.39795*np.cos(theta))
-    return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude*np.pi/180.)*np.sin(phi))/(np.cos(latitude*np.pi/180.)*np.cos(phi)))
+    return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude/180.*np.pi)*np.sin(phi))/(np.cos(latitude/180.*np.pi)*np.cos(phi)))
 
 def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4., airmassCoeff=0.2, randomCoeff=0.):
     # latitude in degrees
@@ -106,7 +108,7 @@ def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, are
         phase = np.arccos(np.clip(np.dot(xyz_rn, -sun_n), -1.0, 1.0)) # assume sun is in -x direction
 
         fac1 = 2/(3*np.pi**2)
-        m_sun = -26.44
+        m_sun = -26.47 # g' band 
         magV = m_sun -2.5*np.log10(fac1 * area * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
 
 
