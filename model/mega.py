@@ -3,7 +3,7 @@ import rebound
 MEarth = 5.97e24
 REarth = 6378.135e3
 
-constellations = {
+constellations_all = {
     "Starlink": [ {'NPLANES':7178,'SATPP':1,'INC':30,'ALT':328},
         {'NPLANES':7178,'SATPP':1,'INC':40,'ALT':334},
         {'NPLANES':7178,'SATPP':1,'INC':53,'ALT':345},
@@ -125,13 +125,11 @@ def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, are
         return None, None
 
 
-def get_simulations(add_constellations=None, use_cache=True):
-    if add_constellations is None:
-        add_constellations = constellations.keys() # all constellations
+def get_simulations(constellations=None, use_cache=True):
+    if constellations is None:
+        constellations = constellations_all
     sims = {}
-    for c in add_constellations:
-        if c not in constellations:
-            raise RuntimeError("Constellation %s not found."%c)
+    for c in constellations.keys():
         sim = None
         if use_cache:
             filename = "mega_"+"".join(x for x in c if x.isalnum())+".bin"
