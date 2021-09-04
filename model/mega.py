@@ -70,7 +70,10 @@ def length_of_night(month,latitude, p=0):
     day = month/12*365.25+79
     theta = 0.2163108+2.*np.arctan(0.9671396*np.tan(0.00860*(day-186)))
     phi = np.arcsin(0.39795*np.cos(theta))
-    return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude/180.*np.pi)*np.sin(phi))/(np.cos(latitude/180.*np.pi)*np.cos(phi)))
+    arccosarg = (np.sin(p*np.pi/180.)+np.sin(latitude/180.*np.pi)*np.sin(phi))/(np.cos(latitude/180.*np.pi)*np.cos(phi))
+    if abs(arccosarg)>=1.:
+        return 0.0
+    return 24./np.pi * np.arccos(arccosarg)
 
 def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4., airmassCoeff=0.2, randomCoeff=0.):
     # latitude in degrees
