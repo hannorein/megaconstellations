@@ -36,6 +36,10 @@ constellations_all = {
         {'NPLANES':28,'SATPP':28,'INC':33,'ALT':509},],
     }
 
+def getAirmass(z):
+    X = 1./(np.cos(z) + 0.50572*(6.07995+90-z*180/np.pi)**(-1.6364))  # Kasten and Young (1989)
+    #X = 1./np.cos(z) * (1-0.0012*np.tan(z)**2)  # Young and Irvine (1967)
+    return X
 
 def add_to_simulation(sim, ICs, debug=False):
     for IC in ICs:
@@ -66,7 +70,7 @@ def length_of_night(timeOfYear,latitude, p=0):
     phi = np.arcsin(0.39795*np.cos(theta))
     return 24./np.pi * np.arccos((np.sin(p*np.pi/180.)+np.sin(latitude*np.pi/180.)*np.sin(phi))/(np.cos(latitude*np.pi/180.)*np.cos(phi)))
 
-def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4.):
+def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4., airmassCoeff=0.2, randomCoeff=0.):
     # latitude in degrees
     # month in months from spring euquinox
     # hours in hours since midnight
@@ -102,7 +106,8 @@ def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, are
         phase = np.arccos(np.clip(np.dot(xyz_rn, -sun_n), -1.0, 1.0)) # assume sun is in -x direction
 
         fac1 = 2/(3*np.pi**2)
-        magV = -26.44 -2.5*np.log10(fac1 * area * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
+        m_sun = -26.44
+        magV = m_sun -2.5*np.log10(fac1 * area * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
 
 
         elevation = (np.pi/2.-np.arccos(np.dot(xyz_rn,obs_n)))/np.pi*180.
@@ -116,6 +121,11 @@ def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, are
         elevation_cut = 0
         xyz_rn = xyz_rn[elevation>elevation_cut]
         magV = magV[elevation>elevation_cut]
+
+        airmass = getAirmass((elevation[elevation>elevation_cut])*np.pi/180.)
+        magV += airmassCoeff*airmass
+        if randomCoeff>0.:
+            magV += randomCoeff*np.random.normal(0.,1.,size=len(magV))
 
         xy.append(xyz_rn[:,1:3]/(1.+xyz_rn[:,0,np.newaxis]))
         mag.append(magV)
