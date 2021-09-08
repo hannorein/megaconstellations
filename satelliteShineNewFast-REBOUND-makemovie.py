@@ -157,7 +157,7 @@ def getStereographic(latitude, tilt, hour):
     xyz_rd = np.linalg.norm(xyz_r,axis=1)
     xyz_rn = xyz_r/xyz_rd[:,np.newaxis]
     
-    airmass=getAirmass((elevation)*np.pi/180.)
+    airmass=getAirmass((90.-elevation)*np.pi/180.)
     #print(elevation,airmass)
     magV+=airmassCoeff*airmass*AIRMASSCOR
     #magV+=np.random.normal(0.,0.2,size=len(magV))
