@@ -1,12 +1,18 @@
 import os
-os.environ[ 'MPLCONFIGDIR' ] = '/home/rein/megaconstellations/webapp/'
-os.chdir("/home/rein/megaconstellations/webapp/")
+try:
+    os.chdir("/home/rein/megaconstellations/webapp/")
+    os.environ[ 'MPLCONFIGDIR' ] = '/home/rein/megaconstellations/webapp/'
+except:
+    print("Cannot change directory. Probably not running on server.")
+import sys
+sys.path.insert(0,'../model')
 
 from flask import Flask, render_template, request
 import rebound
 import numpy as np
 import matplotlib
 import matplotlib.pylab as plt
+cm = plt.cm.get_cmap('plasma_r')
 from matplotlib.collections import PatchCollection
 import matplotlib.transforms as transforms
 import mega
@@ -29,10 +35,11 @@ def index():
     latitude = 50.
     month = 3
     hour = 0.
-    albedo = 0.2
+    albedo = 0.3
     area = 4.0
-    enabled_constellations = [k for k in mega.constellations]
-    return render_template('index.html', latitudes=latitudes, latitude=latitude, month=month, area=area, albedo=albedo, hour=hour, constellations=sims, enabled_constellations=enabled_constellations)
+    enabled_constellations = [k for k in mega.constellations_all]
+    enabled_effects = ["atmosphere", "scatter"]
+    return render_template('index.html', latitudes=latitudes, latitude=latitude, month=month, area=area, albedo=albedo, hour=hour, constellations=sims, enabled_constellations=enabled_constellations, enabled_effects=enabled_effects)
 
 
 def rotY(xyz,alpha):
@@ -69,6 +76,10 @@ def plot_png():
     except:
         enabled_constellations = []
     try:
+        enabled_effects = request.args.getlist('effects')
+    except:
+        enabled_effects = []
+    try:
         albedo = float(request.args.get('albedo'))
     except:
         albedo = 0.2
@@ -77,7 +88,7 @@ def plot_png():
     except:
         area = 4.
 
-    magVmin, magVmax =5, 8
+    mag_min, mag_max =5, 8
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
     
@@ -109,14 +120,25 @@ def plot_png():
 
 
     N = 0
+    Nvis = 0
     esims = {}
     for k in enabled_constellations:
         esims[k] = sims[k]
 
-    xyzf_stereographic, magV = mega.get_stereographic_data(esims, latitude=latitude, month=month, hour=hour, albedo=albedo, area=area)
+    randomCoeff = 0.
+    if "scatter" in enabled_effects:
+        randomCoeff = 0.2
+
+    airmassCoeff = 0.
+    if "atmosphere" in enabled_effects:
+        airmassCoeff = 0.2
+
+
+    xyzf_stereographic, magV = mega.get_stereographic_data(esims, latitude=latitude, month=month, hour=hour, albedo=albedo, area=area, airmassCoeff=airmassCoeff, randomCoeff=randomCoeff)
     if xyzf_stereographic is not None:
         N = len(xyzf_stereographic)
-        im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=magVmin,vmax=magVmax)
+        Nvis = len(magV[magV<6.5])
+        im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=mag_min,vmax=mag_max)
 
     #im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4,color="r")
     card_pos = 1.11
@@ -124,7 +146,12 @@ def plot_png():
     ax.text(0,-card_pos, "S",ha="center",va="center")
     ax.text(card_pos,0, "W",ha="center",va="center")
     ax.text(-card_pos,0, "E",ha="center",va="center")
-    ax.text(0.7,-0.95,"N=%d"%N,fontsize=12)
+    ax.text(0.7,-0.9,"N$_{tot}$=%d"%N,fontsize=12)
+    ax.text(0.7,-1.02,"N$_{vis}$=%d"%Nvis,fontsize=12) 
+
+    cb = fig.colorbar(im,ax=ax,shrink=1./2.)
+    cb.set_label(label="$g$-mag",size=12)
+    cb.ax.tick_params(labelsize=12)
 
     fig.tight_layout()
 

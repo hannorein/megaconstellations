@@ -10,7 +10,7 @@
     <body>
 
         <h1>Mega Constellations - Visibility Predictor</h1>
-        <p>This tool allows you to predict the number and brightness of visible satellites from several mega constallation. For details see Lawler, Boley &amp; Rein 2021.<p>
+        <p>This tool allows you to predict the number and brightness of visible satellites from several mega constallation. For details see Lawler, Boley &amp; Rein 2021. The source code of this website can be found on <a href="https://github.com/hannorein/megaconstellations">GitHub</a>. Video animations can be found <a href="http://uregina.ca/~slb861/satcon.html">here</a>.<p>
         <form id="form" action="" method="post">
             <p>
             <label for="latitudedrop">Latitude:</label>
@@ -52,6 +52,14 @@
             {% for k in constellations %}
             <input type="checkbox" name="constellation" value="{{ k }}" {% if k in enabled_constellations %}checked{% endif %} >{{ k }} ({{ constellations[k].N-1 }})<br>
             {% endfor %}
+            </div>
+            </p>
+            
+            <p>
+            <div class="checkboxlabel">Include effects:</div>
+            <div class="checkboxgroup">
+            <input type="checkbox" name="effects" value="atmosphere" {% if "atmosphere" in enabled_effects %}checked{% endif %} >Atmospheric extinction model<br>
+            <input type="checkbox" name="effects" value="scatter" {% if "scatter" in enabled_effects %}checked{% endif %} >Brightness scatter (0.2 mag)<br>
             </div>
             </p>
 
