@@ -37,6 +37,7 @@ constellations_all = {
     }
 
 def getAirmass(z):
+    # z is the Zenith enagle
     X = 1./(np.cos(z) + 0.50572*(6.07995+90-z*180/np.pi)**(-1.6364))  # Kasten and Young (1989)
     #X = 1./np.cos(z) * (1-0.0012*np.tan(z)**2)  # Young and Irvine (1967)
     return X
@@ -127,7 +128,7 @@ def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.3, are
         xyz_rn = xyz_rn[elevation>elevation_cut]
         magV = magV[elevation>elevation_cut]
 
-        airmass = getAirmass((elevation[elevation>elevation_cut])*np.pi/180.)
+        airmass = getAirmass((90.-elevation[elevation>elevation_cut])*np.pi/180.)
         magV += airmassCoeff*airmass
         if randomCoeff>0.:
             magV += randomCoeff*np.random.normal(0.,1.,size=len(magV))
