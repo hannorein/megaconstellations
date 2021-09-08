@@ -59,6 +59,7 @@ def lengthOfNight(timeOfYear,latitude, p=0):
 
 @app.route('/plot.png')
 def plot_png():
+    night = True
     try:
         latitude = float(request.args.get('latitude'))
     except:
@@ -67,10 +68,36 @@ def plot_png():
         month = float(request.args.get('month')) 
     except:
         month = 3.
+    hour = ""
     try:
-        hour = float(request.args.get('hour'))
+        hour = request.args.get('hour')
     except:
-        hour = 0.
+        hour = ""
+    if hour == "nauticaldusk":
+        lon = mega.length_of_night(month=month, latitude=latitude, p=12)
+        if lon<=0.:
+            night=False
+        hour = -lon/2.
+    elif hour == "sunset":
+        lon = mega.length_of_night(month=month, latitude=latitude, p=0)
+        if lon<=0.:
+            night=False
+        hour = -lon/2.
+    elif hour == "nauticaldawn":
+        lon = mega.length_of_night(month=month, latitude=latitude, p=12)
+        if lon<=0.:
+            night=False
+        hour = lon/2.
+    elif hour == "sunrise":
+        lon = mega.length_of_night(month=month, latitude=latitude, p=0)
+        if lon<=0.:
+            night=False
+        hour = lon/2.
+    else:
+        try:
+            hour = float(request.args.get('hour'))
+        except:
+            hour = 0.
     try:
         enabled_constellations = request.args.getlist('constellation')
     except:
@@ -134,24 +161,27 @@ def plot_png():
         airmassCoeff = 0.2
 
 
-    xyzf_stereographic, magV = mega.get_stereographic_data(esims, latitude=latitude, month=month, hour=hour, albedo=albedo, area=area, airmassCoeff=airmassCoeff, randomCoeff=randomCoeff)
-    if xyzf_stereographic is not None:
-        N = len(xyzf_stereographic)
-        Nvis = len(magV[magV<6.5])
-        im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=mag_min,vmax=mag_max)
+    if night:
+        xyzf_stereographic, magV = mega.get_stereographic_data(esims, latitude=latitude, month=month, hour=hour, albedo=albedo, area=area, airmassCoeff=airmassCoeff, randomCoeff=randomCoeff)
+        if xyzf_stereographic is not None:
+            N = len(xyzf_stereographic)
+            Nvis = len(magV[magV<6.5])
+            im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4, c=magV,cmap=cm,vmin=mag_min,vmax=mag_max)
 
-    #im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4,color="r")
-    card_pos = 1.11
-    ax.text(0,card_pos, "N",ha="center",va="center")
-    ax.text(0,-card_pos, "S",ha="center",va="center")
-    ax.text(card_pos,0, "W",ha="center",va="center")
-    ax.text(-card_pos,0, "E",ha="center",va="center")
-    ax.text(0.7,-0.9,"N$_{tot}$=%d"%N,fontsize=12)
-    ax.text(0.7,-1.02,"N$_{vis}$=%d"%Nvis,fontsize=12) 
-
-    cb = fig.colorbar(im,ax=ax,shrink=1./2.)
-    cb.set_label(label="$g$-mag",size=12)
-    cb.ax.tick_params(labelsize=12)
+        #im=ax.scatter(xyzf_stereographic[:,0],xyzf_stereographic[:,1],s=4,color="r")
+        card_pos = 1.11
+        ax.text(0,card_pos, "N",ha="center",va="center")
+        ax.text(0,-card_pos, "S",ha="center",va="center")
+        ax.text(card_pos,0, "W",ha="center",va="center")
+        ax.text(-card_pos,0, "E",ha="center",va="center")
+        ax.text(0.7,-0.9,"N$_{tot}$=%d"%N,fontsize=12)
+        ax.text(0.7,-1.02,"N$_{vis}$=%d"%Nvis,fontsize=12) 
+        
+        cb = fig.colorbar(im,ax=ax,shrink=1./2.)
+        cb.set_label(label="$g$-mag",size=12)
+        cb.ax.tick_params(labelsize=12)
+    else:
+        ax.text(0.,0.,"Parameter combination not valid.\nAdjust latitude, time, or date.",ha="center", color="white") 
 
     fig.tight_layout()
 
