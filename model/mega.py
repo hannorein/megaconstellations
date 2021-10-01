@@ -76,7 +76,7 @@ def length_of_night(month,latitude, p=0):
         return 0.0
     return 24./np.pi * np.arccos(arccosarg)
 
-def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.3, area=4., airmassCoeff=0.2, randomCoeff=0.):
+def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4., airmassCoeff=0.2, randomCoeff=0.5, elevation_cut = 0):
     # latitude in degrees
     # month in months from spring euquinox
     # hours in hours since midnight
@@ -112,8 +112,10 @@ def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.3, are
         phase = np.arccos(np.clip(np.dot(xyz_rn, -sun_n), -1.0, 1.0)) # assume sun is in -x direction
 
         fac1 = 2/(3*np.pi**2)
+        pfac = 3.1
         m_sun = -26.47 # g' band 
         magV = m_sun -2.5*np.log10(fac1 * area * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) ) ) + 5 * np.log10(xyz_rd)
+        #magV = m_sun -2.5*np.log10(2/(3*np.pi**(pfac+1)) * area * albedo * ( (np.pi-phase)*np.cos(phase) + np.sin(phase) )**pfac ) + 5 * np.log10(xyz_rd)
 
 
         elevation = (np.pi/2.-np.arccos(np.dot(xyz_rn,obs_n)))/np.pi*180.
@@ -124,7 +126,7 @@ def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.3, are
         xyz_rd = np.linalg.norm(xyz_r,axis=1)
         xyz_rn = xyz_r/xyz_rd[:,np.newaxis]
 
-        elevation_cut = 0
+        #elevation_cut = 45
         xyz_rn = xyz_rn[elevation>elevation_cut]
         magV = magV[elevation>elevation_cut]
 
