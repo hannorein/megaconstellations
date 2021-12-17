@@ -20,6 +20,8 @@ This directory contains the code required to run the interactive webapp running 
 It requires flask, rebound, numpy, and matplotlib as well as the data files in `/data` and the model in `model/mega.py` on the server side. It uses jquery on the client side.
 Note that when run for the first time, the app creates several binary REBOUND files to later reload the satellite data more quickly. These binary files are only a cache and can be deleted at any time.
 
+## iOS App
+You might also be interested in the iOS app [Mega Constellations](https://apps.apple.com/us/app/mega-constellations/id1598820453).
 
 ## Authors
 - [Hanno Rein](mailto:hanno.rein@utoronto.ca)
