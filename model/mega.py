@@ -4,6 +4,38 @@ MEarth = 5.97e24
 REarth = 6378.135e3
 
 constellations_all = {
+    "SXODC": [ {'NPLANES':337,'SATPP':45,'INC':30,'ALT':400},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':450},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':500},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':550},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':600},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':900},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':950},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':1000},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':1050},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':1100},
+        {'NPLANES':25,'SATPP':1,'INC':30,'ALT':1200},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':1900},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':1950},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':2000},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':2050},
+        {'NPLANES':337,'SATPP':45,'INC':30,'ALT':2100},
+        {'NPLANES':1030,'SATPP':50,'INC':97.4,'ALT':400},
+        {'NPLANES':1030,'SATPP':50,'INC':97.4,'ALT':450},
+        {'NPLANES':1030,'SATPP':50,'INC':97.4,'ALT':500},
+        {'NPLANES':1030,'SATPP':50,'INC':97.4,'ALT':550},
+        {'NPLANES':1030,'SATPP':50,'INC':97.4,'ALT':600},
+        {'NPLANES':1030,'SATPP':50,'INC':99.5,'ALT':900},
+        {'NPLANES':1030,'SATPP':50,'INC':99.5,'ALT':950},
+        {'NPLANES':1030,'SATPP':50,'INC':99.5,'ALT':1000},
+        {'NPLANES':1030,'SATPP':50,'INC':99.5,'ALT':1050},
+        {'NPLANES':1030,'SATPP':50,'INC':99.5,'ALT':1100},
+        {'NPLANES':103,'SATPP':500,'INC':104.9,'ALT':1900},
+        {'NPLANES':103,'SATPP':500,'INC':104.9,'ALT':1950},
+        {'NPLANES':103,'SATPP':500,'INC':104.9,'ALT':2000},
+        {'NPLANES':103,'SATPP':500,'INC':104.9,'ALT':2050},
+        {'NPLANES':103,'SATPP':500,'INC':104.9,'ALT':2100},
+              ],
     "Starlink": [ {'NPLANES':7178,'SATPP':1,'INC':30,'ALT':328},
         {'NPLANES':7178,'SATPP':1,'INC':40,'ALT':334},
         {'NPLANES':7178,'SATPP':1,'INC':53,'ALT':345},
@@ -163,6 +195,6 @@ def get_simulations(constellations=None, use_cache=True):
             sim.N_active = 1
             add_to_simulation(sim, constellations[c])
             if use_cache:
-                sim.save(filename)
+                sim.save_to_file(filename)
         sims[c] = sim
     return sims
