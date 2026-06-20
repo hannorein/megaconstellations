@@ -10,7 +10,7 @@ def TLE(n, inc, Omega, M):
 """ %(inc,Omega,M, n)
     return TLE
 count = 0
-di = {"Starlink":"starlinkfuture","OneWeb":"onewebfuture", "StarNet/GW":"starnetfuture","Kuiper":"kuiperfuture", "SXODC":"sxodc"}
+di = {"Starlink":"starlinkfuture","OneWeb":"onewebfuture", "StarNet/GW":"starnetfuture","Kuiper":"kuiperfuture", "SXODC":"sxodc", "Sunrise":"sunrise"}
 for k in di:
     name = di[k]
     ICs = m.constellations_all[k]
