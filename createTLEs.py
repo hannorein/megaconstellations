@@ -43,15 +43,20 @@ for k in di:
             Omegas = np.linspace(0.,2.*np.pi,nplanes,endpoint=False)
             inc = IC["INC"]
             incsynch = np.arccos(-np.power(a/12352000,7./2.))/np.pi*180
+            issynch = False
             if (np.abs(inc - incsynch)) <10:
                 inc = incsynch
+                issynch = True
 
             for i, Omega in enumerate(Omegas):
                 Ms = np.linspace(0.,2.*np.pi,nsat) + 2.*np.pi/nsat*0.25*np.random.normal(size=nsat)
                 Omega = np.fmod(Omega/np.pi*180.+360.,360.)
                 for M in Ms:
                     M = np.fmod(M/np.pi*180.+360.,360.)
-                    t = TLEbinary(n=n, inc=inc, Omega=Omega, M=M)
+                    _Omega = Omega
+                    if issynch:
+                        _Omega += 1.0*np.random.normal()
+                    t = TLEbinary(n=n, inc=inc, Omega=_Omega, M=M)
                     count +=1
                     f.write(t)
     print(k, count, count2)
