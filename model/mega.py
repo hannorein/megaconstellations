@@ -293,13 +293,12 @@ def add_to_simulation(sim, ICs, debug=False):
         nplanes=IC['NPLANES']
         nsat=IC['SATPP']
         a = IC['ALT']*1000.+REarth
-
         Omegas = np.linspace(0.,2.*np.pi,nplanes)
         for i, Omega in enumerate(Omegas):
             # 5 percent jitter
             Ms = np.linspace(0.,2.*np.pi,nsat)+ 2.*np.pi/nsat*0.25*np.random.normal(size=nsat)
             for j, M in enumerate(Ms):
-                sim.add(M=M, a=a, omega=0, e=0, Omega=Omega, inc=IC['INC']*np.pi/180.)
+                sim.add(primary=sim.particles[0], M=M, a=a, omega=0, e=0, Omega=Omega, inc=IC['INC']*np.pi/180.)
                 if debug and sim.N>100:
                     return
 def rotY(xyz,alpha):
