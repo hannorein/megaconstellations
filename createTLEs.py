@@ -47,6 +47,7 @@ for k in di:
             if (np.abs(inc - incsynch)) <10:
                 inc = incsynch
                 issynch = True
+            #print("ConstellationPlane(alt: %.1f, inc: %.1f, nplanes: %d, satpp: %d)," %(IC["ALT"], IC["INC"], IC["NPLANES"], IC["SATPP"]))
 
             for i, Omega in enumerate(Omegas):
                 Ms = np.linspace(0.,2.*np.pi,nsat) + 2.*np.pi/nsat*0.25*np.random.normal(size=nsat)
