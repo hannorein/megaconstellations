@@ -4,6 +4,39 @@ MEarth = 5.97e24
 REarth = 6378.135e3
 
 constellations_all = {
+    "Stampede": [ 
+        { 'NPLANES': 1, 'ALT': 700.0, 'INC': 98.2, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 710.0, 'INC': 98.2, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 720.0, 'INC': 98.3, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 730.0, 'INC': 98.3, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 740.0, 'INC': 98.3, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 750.0, 'INC': 98.4, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 760.0, 'INC': 98.4, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 770.0, 'INC': 98.5, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 780.0, 'INC': 98.5, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 790.0, 'INC': 98.6, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 800.0, 'INC': 98.6, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 810.0, 'INC': 98.7, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 820.0, 'INC': 98.7, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 830.0, 'INC': 98.7, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 840.0, 'INC': 98.8, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 850.0, 'INC': 98.8, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 860.0, 'INC': 98.9, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 870.0, 'INC': 98.9, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 880.0, 'INC': 99.0, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 890.0, 'INC': 99.0, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 900.0, 'INC': 99.0, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 910.0, 'INC': 99.1, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 920.0, 'INC': 99.1, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 930.0, 'INC': 99.2, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 940.0, 'INC': 99.2, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 950.0, 'INC': 99.2, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 960.0, 'INC': 99.3, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 970.0, 'INC': 99.3, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 980.0, 'INC': 99.4, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 990.0, 'INC': 99.4, 'SATPP': 645, 'OMEGA':282},
+        { 'NPLANES': 1, 'ALT': 1000., 'INC': 99.5, 'SATPP': 650, 'OMEGA':282},
+	],
     "Sunrise": [ 
         { 'NPLANES': 1, 'ALT':500.0 ,  'INC': 97.4   , 'SATPP':  740 }, 
         { 'NPLANES': 1, 'ALT':510.3 ,  'INC': 97.4   , 'SATPP':  740 }, 
@@ -292,15 +325,25 @@ def add_to_simulation(sim, ICs, debug=False):
     for IC in ICs:
         nplanes=IC['NPLANES']
         nsat=IC['SATPP']
-        a = IC['ALT']*1000.+REarth
-        Omegas = np.linspace(0.,2.*np.pi,nplanes)
+        a = IC["ALT"]*1000.0 + REarth ## in m
+        Omegas = np.linspace(0.,360.0,nplanes,endpoint=False)+90.0
+        if "OMEGA" in IC:
+            Omegas += IC["OMEGA"]
+        inc = IC["INC"]
+        incsynch = np.arccos(-np.power(a/12352000,7./2.))/np.pi*180
+        issynch = False
+        if (np.abs(inc - incsynch)) <10:
+            inc = incsynch
+            issynch = True
+        Ms = np.linspace(0.,2.*np.pi,nsat) + 2.*np.pi/nsat*0.25*np.random.normal(size=nsat)
         for i, Omega in enumerate(Omegas):
-            # 5 percent jitter
-            Ms = np.linspace(0.,2.*np.pi,nsat)+ 2.*np.pi/nsat*0.25*np.random.normal(size=nsat)
-            for j, M in enumerate(Ms):
-                sim.add(primary=sim.particles[0], M=M, a=a, omega=0, e=0, Omega=Omega, inc=IC['INC']*np.pi/180.)
-                if debug and sim.N>100:
-                    return
+            for M in Ms:
+                _Omega = Omega
+                if issynch:
+                    _Omega += 0.1*np.random.normal()
+                else:
+                    _Omega += 180*np.random.normal()
+                sim.add(primary=sim.particles[0], a=a, inc=inc*np.pi/180., M=M, omega=0, e=0, Omega=_Omega/180*np.pi)
 def rotY(xyz,alpha):
     c, s = np.cos(alpha), np.sin(alpha)
     M = np.array([[c,0,-s],[0,1,0],[s,0,c]])
@@ -311,14 +354,17 @@ def rotZ(xyz,alpha):
     return xyz @ M
 
 def length_of_night(month,latitude, p=0):
-    # https://www.ikhebeenvraag.be/mediastorage/FSDocument/171/Forsythe+-+A+model+comparison+for+daylength+as+a+function+of+latitude+and+day+of+year+-+1995.pdf
+    # month since spring equinox
     # p=18 for astronomical twilight
+    # https://www.ikhebeenvraag.be/mediastorage/FSDocument/171/Forsythe+-+A+model+comparison+for+daylength+as+a+function+of+latitude+and+day+of+year+-+1995.pdf
     day = month/12*365.25+79
     theta = 0.2163108+2.*np.arctan(0.9671396*np.tan(0.00860*(day-186)))
     phi = np.arcsin(0.39795*np.cos(theta))
     arccosarg = (np.sin(p*np.pi/180.)+np.sin(latitude/180.*np.pi)*np.sin(phi))/(np.cos(latitude/180.*np.pi)*np.cos(phi))
-    if abs(arccosarg)>=1.:
+    if arccosarg>=1.:
         return 0.0
+    if arccosarg<=-1:
+        return 24.0
     return 24./np.pi * np.arccos(arccosarg)
 
 def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4., airmassCoeff=0.2, randomCoeff=0.5, elevation_cut = 0):
