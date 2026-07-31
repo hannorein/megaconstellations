@@ -370,7 +370,7 @@ def length_of_night(month,latitude, p=0):
         return 24.0
     return 24./np.pi * np.arccos(arccosarg)
 
-def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4., airmassCoeff=0.2, randomCoeff=0.5, elevation_cut = 0):
+def get_stereographic_data(sims, latitude=0., month=0., hour=0., albedo=0.2, area=4., airmassCoeff=0.15, randomCoeff=0.5, elevation_cut = 0):
     # latitude in degrees
     # month in months from spring euquinox
     # hours in hours since midnight
