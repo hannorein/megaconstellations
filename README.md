@@ -1,6 +1,6 @@
 # Visibility Predictions for Near-Future Satellite Megaconstellations: Latitudes near 50 Degrees will Experience the Worst Light Pollution
 
-This repository contains the code to reproduce the figures of [S. M. Lawler, A. C. Boley, H. Rein (2021)](https://arxiv.org/abs/2109.04328) and the code for the webapp currently running at http://megaconstellations.hanno-rein.de.
+This repository contains the code to reproduce the figures of [S. M. Lawler, A. C. Boley, H. Rein (2021)](https://arxiv.org/abs/2109.04328) as well as some of the figures of Boley, Lawler, Rein (in prep).
 
 
 ## Directories
@@ -14,6 +14,9 @@ The `mega.py` file in this directory includes the code for out model. It contain
 ### `/paper`
 This directory includes Jupyter notebooks to recreate the figures of [S. M. Lawler, A. C. Boley, H. Rein (2021)](https://arxiv.org/abs/2109.04328).
 The Jupyter notebook make use of the data files in `/data` and the model in `/model/mega.py`.
+
+### `/new_paper`
+This directory includes Jupyter notebooks to recreate some figures of Boley, Lawler, Rein (in prep).
 
 ### `/webapp`
 This directory contains the code required to run the interactive webapp running at http://megaconstellations.hanno-rein.de.
